@@ -5,7 +5,6 @@ import GoalDetails from './components/GoalDetails';
 import EditGoal from './components/EditGoal';
 import ConfirmModal from './components/ConfirmModal';
 import EmptyState from './components/EmptyState';
-import ImageInput from './components/ImageInput';
 import type { Goal } from './types';
 
 // Storage inline para evitar problemas de cache
@@ -107,7 +106,6 @@ function App() {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newGoalImage, setNewGoalImage] = useState('');
   const [showMenu, setShowMenu] = useState(false);
   const [sortBy, setSortBy] = useState<SortType>('recent');
   const [hideCompleted, setHideCompleted] = useState(false);
@@ -149,7 +147,7 @@ function App() {
       storage.addGoal({
         name: formData.get('name') as string,
         targetAmount: parseFloat(formData.get('amount') as string),
-        imageUrl: newGoalImage,
+        imageUrl: (formData.get('image') as string) || '',
         isPurchased: formData.get('mode') === 'purchased',
         deadline: (formData.get('deadline') as string) || undefined,
         category: (formData.get('category') as string) || undefined
@@ -157,7 +155,6 @@ function App() {
 
       loadGoals();
       setShowCreateModal(false);
-      setNewGoalImage('');
       e.currentTarget.reset();
     } catch (error) {
       console.error('Erro:', error);
@@ -398,19 +395,23 @@ function App() {
 
       <main className="max-w-4xl mx-auto p-4">
         {displayGoals.length === 0 ? (
-          goals.length === 0 ? (
-            <EmptyState onCreateClick={() => setShowCreateModal(true)} />
-          ) : (
-            <div className="text-center py-16">
-              <Target size={64} className="text-zinc-700 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-zinc-600 mb-2">
-                Nenhuma meta para exibir
-              </h2>
-              <p className="text-zinc-500 mb-6">
-                Ajuste os filtros no menu
-              </p>
-            </div>
-          )
+          <div className="text-center py-16">
+            <Target size={64} className="text-zinc-700 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-zinc-600 mb-2">
+              {goals.length === 0 ? 'Nenhuma meta ainda' : 'Nenhuma meta para exibir'}
+            </h2>
+            <p className="text-zinc-500 mb-6">
+              {goals.length === 0 ? 'Crie sua primeira meta!' : 'Ajuste os filtros no menu'}
+            </p>
+            {goals.length === 0 && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-gold-500 hover:bg-gold-600 text-black font-semibold px-6 py-3 rounded-md"
+              >
+                Criar Primeira Meta
+              </button>
+            )}
+          </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {displayGoals.map(goal => (
@@ -456,10 +457,15 @@ function App() {
                 />
               </div>
 
-              <ImageInput 
-                value={newGoalImage}
-                onChange={setNewGoalImage}
-              />
+              <div>
+                <label className="block text-sm font-medium mb-1">Imagem (opcional)</label>
+                <input
+                  type="url"
+                  name="image"
+                  placeholder="https://..."
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-white focus:outline-none focus:border-gold-500"
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Prazo (opcional)</label>

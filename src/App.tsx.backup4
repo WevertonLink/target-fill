@@ -6,6 +6,7 @@ import EditGoal from './components/EditGoal';
 import ConfirmModal from './components/ConfirmModal';
 import EmptyState from './components/EmptyState';
 import ImageInput from './components/ImageInput';
+import FilteredEmptyState from './components/FilteredEmptyState';
 import type { Goal } from './types';
 
 // Storage inline para evitar problemas de cache
@@ -107,10 +108,10 @@ function App() {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newGoalImage, setNewGoalImage] = useState('');
   const [showMenu, setShowMenu] = useState(false);
   const [sortBy, setSortBy] = useState<SortType>('recent');
   const [hideCompleted, setHideCompleted] = useState(false);
+  const hasActiveFilters = sortBy !== 'recent' || hideCompleted;
   const [confirmModal, setConfirmModal] = useState<ConfirmState>({
     show: false,
     title: '',
@@ -149,7 +150,7 @@ function App() {
       storage.addGoal({
         name: formData.get('name') as string,
         targetAmount: parseFloat(formData.get('amount') as string),
-        imageUrl: newGoalImage,
+        imageUrl: (formData.get('image') as string) || '',
         isPurchased: formData.get('mode') === 'purchased',
         deadline: (formData.get('deadline') as string) || undefined,
         category: (formData.get('category') as string) || undefined
@@ -157,7 +158,6 @@ function App() {
 
       loadGoals();
       setShowCreateModal(false);
-      setNewGoalImage('');
       e.currentTarget.reset();
     } catch (error) {
       console.error('Erro:', error);
@@ -456,10 +456,15 @@ function App() {
                 />
               </div>
 
-              <ImageInput 
-                value={newGoalImage}
-                onChange={setNewGoalImage}
-              />
+              <div>
+                <label className="block text-sm font-medium mb-1">Imagem (opcional)</label>
+                <input
+                  type="url"
+                  name="image"
+                  placeholder="https://..."
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-white focus:outline-none focus:border-gold-500"
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Prazo (opcional)</label>
