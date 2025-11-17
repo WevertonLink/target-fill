@@ -1,54 +1,71 @@
-name: Build Android APK
+name: 🤖 Build Android APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
   build:
+    name: Build APK
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
     
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
       with:
         node-version: '20'
         
-    - name: Install pnpm
-      uses: pnpm/action-setup@v2
+    - name: 📦 Setup pnpm
+      uses: pnpm/action-setup@v4
       with:
-        version: 8
+        version: 9
         
-    - name: Install dependencies
+    - name: 📚 Install dependencies
       run: pnpm install
       
-    - name: Build web app
+    - name: 🏗️ Build web app
       run: pnpm build
       
-    - name: Setup Java
-      uses: actions/setup-java@v3
+    - name: ☕ Setup Java
+      uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
         
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v2
+    - name: 🤖 Setup Android SDK
+      uses: android-actions/setup-android@v3
       
-    - name: Sync Capacitor
+    - name: 🔄 Sync Capacitor
+      run: pnpm exec cap sync android
+      
+    - name: 🎨 Generate icons
       run: |
-        pnpm exec cap sync android
+        sudo apt-get update
+        sudo apt-get install -y imagemagick
+        chmod +x generate-icons.sh
+        ./generate-icons.sh
         
-    - name: Build APK
+    - name: 📱 Build Debug APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleDebug --no-daemon
         
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
+    - name: 📤 Upload Debug APK
+      uses: actions/upload-artifact@v4
       with:
-        name: app-debug
+        name: target-fill-debug-apk
         path: android/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
+        
+    - name: 📊 APK Info
+      run: |
+        echo "✅ APK gerado com sucesso!"
+        echo "📦 Tamanho: $(du -h android/app/build/outputs/apk/debug/app-debug.apk | cut -f1)"
+        echo "📍 Localização: android/app/build/outputs/apk/debug/app-debug.apk"

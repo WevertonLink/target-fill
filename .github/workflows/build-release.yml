@@ -1,0 +1,86 @@
+name: 🚀 Build Release AAB
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    name: Build Release AAB
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: 📦 Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 8
+        
+    - name: 📚 Install dependencies
+      run: pnpm install
+      
+    - name: 🏗️ Build web app (production)
+      run: pnpm build
+      
+    - name: ☕ Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: 🤖 Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: 🔄 Sync Capacitor
+      run: pnpm exec cap sync android
+      
+    - name: 🎨 Generate icons
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y imagemagick
+        chmod +x generate-icons.sh
+        ./generate-icons.sh
+        
+    - name: 🔐 Setup Keystore
+      run: |
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+        
+    - name: 📱 Build Release AAB
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew bundleRelease --no-daemon \
+          -Pandroid.injected.signing.store.file=app/release.keystore \
+          -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+          -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+          -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+        
+    - name: 📤 Upload Release AAB
+      uses: actions/upload-artifact@v4
+      with:
+        name: target-fill-release-aab
+        path: android/app/build/outputs/bundle/release/app-release.aab
+        retention-days: 90
+        
+    - name: 📊 AAB Info
+      run: |
+        echo "✅ AAB gerado com sucesso!"
+        echo "📦 Tamanho: $(du -h android/app/build/outputs/bundle/release/app-release.aab | cut -f1)"
+        echo "📍 Localização: android/app/build/outputs/bundle/release/app-release.aab"
