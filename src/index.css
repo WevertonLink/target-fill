@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-black text-white;
+  }
+}
+
+:root {
+  --color-primary: #FFD700;
+  --color-secondary: #FFC700;
+}
+
+.bg-gold-500 {
+  background-color: var(--color-primary) !important;
+}
+
+.text-gold-400 {
+  color: var(--color-primary) !important;
+}
+
+.border-gold-500,
+.border-gold-600 {
+  border-color: var(--color-primary) !important;
+}
+
+.hover\:bg-gold-600:hover {
+  background-color: var(--color-secondary) !important;
+}
+
+.hover\:border-gold-600:hover {
+  border-color: var(--color-secondary) !important;
+}
+
+.focus\:border-gold-500:focus {
+  border-color: var(--color-primary) !important;
+}

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Export Target-Fill Data</title>
+</head>
+<body>
+    <h1>Exportar Dados do Target-Fill</h1>
+    <button onclick="exportData()">Baixar Backup JSON</button>
+    <script>
+        function exportData() {
+            const data = localStorage.getItem('target_fill_goals');
+            if (!data) {
+                alert('Nenhum dado encontrado');
+                return;
+            }
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'target-fill-backup.json';
+            a.click();
+        }
+    </script>
+</body>
+</html>
