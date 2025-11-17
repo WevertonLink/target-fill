@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Target, Menu, X, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
+import { Plus, Target, Menu, X, ArrowUpDown, Eye, EyeOff, Home } from 'lucide-react';
 import GoalCard from './components/GoalCard';
 import GoalDetails from './components/GoalDetails';
 import EditGoal from './components/EditGoal';
@@ -111,6 +111,7 @@ function App() {
   const [showMenu, setShowMenu] = useState(false);
   const [sortBy, setSortBy] = useState<SortType>('recent');
   const [hideCompleted, setHideCompleted] = useState(false);
+  const [showAboutModal, setShowAboutModal] = useState(false);
   const [confirmModal, setConfirmModal] = useState<ConfirmState>({
     show: false,
     title: '',
@@ -286,6 +287,13 @@ function App() {
             <h1 className="text-2xl font-bold text-gold-400">Target-Fill</h1>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAboutModal(true)}
+              className="p-2 hover:bg-zinc-800 rounded-md transition-colors"
+              title="Início"
+            >
+              <Home size={24} className="text-gold-400" />
+            </button>
             <button
               onClick={() => setShowCreateModal(true)}
               className="bg-gold-500 hover:bg-gold-600 text-black font-semibold px-4 py-2 rounded-md flex items-center gap-2"
@@ -547,6 +555,39 @@ function App() {
           }}
           onCancel={hideConfirm}
         />
+      )}
+
+      {showAboutModal && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
+          <div className="bg-zinc-900 rounded-lg max-w-md w-full p-6 border border-zinc-800 relative">
+            <button
+              onClick={() => setShowAboutModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors"
+            >
+              <X size={24} />
+            </button>
+
+            <EmptyState
+              onCreateClick={() => {
+                setShowAboutModal(false);
+                setShowCreateModal(true);
+              }}
+              onControlClick={() => {
+                setShowAboutModal(false);
+                setHideCompleted(false);
+                setSortBy('recent');
+              }}
+              onProgressClick={() => {
+                setShowAboutModal(false);
+                setSortBy('progress');
+              }}
+              onDeadlineClick={() => {
+                setShowAboutModal(false);
+                setSortBy('deadline');
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

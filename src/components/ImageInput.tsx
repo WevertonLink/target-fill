@@ -1,24 +1,27 @@
-import { useState } from 'react';
-import { Image as ImageIcon, Link, X } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Link, X, Upload } from 'lucide-react';
 
 interface ImageInputProps {
   value: string;
   onChange: (url: string) => void;
 }
 
-const suggestedImages = [
-  { name: 'iPhone', url: 'https://images.unsplash.com/photo-1592286927505-34eddc61241e?w=400' },
-  { name: 'Carro', url: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400' },
-  { name: 'Casa', url: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400' },
-  { name: 'Viagem', url: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400' },
-  { name: 'Notebook', url: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400' },
-  { name: 'Moto', url: 'https://images.unsplash.com/photo-1558981852-426c6c22a060?w=400' },
-];
-
 export default function ImageInput({ value, onChange }: ImageInputProps) {
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        onChange(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div>
@@ -53,11 +56,11 @@ export default function ImageInput({ value, onChange }: ImageInputProps) {
         <div className="space-y-2">
           <button
             type="button"
-            onClick={() => setShowSuggestions(!showSuggestions)}
+            onClick={() => fileInputRef.current?.click()}
             className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
           >
-            <ImageIcon size={20} />
-            <span>Escolher imagem sugerida</span>
+            <Upload size={20} />
+            <span>Escolher imagem do dispositivo</span>
           </button>
 
           <button
@@ -66,8 +69,17 @@ export default function ImageInput({ value, onChange }: ImageInputProps) {
             className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
           >
             <Link size={20} />
-            <span>Inserir link personalizado</span>
+            <span>Inserir link da internet</span>
           </button>
+
+          {/* Input de arquivo oculto */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
         </div>
       )}
 
@@ -104,32 +116,6 @@ export default function ImageInput({ value, onChange }: ImageInputProps) {
           <p className="text-xs text-zinc-500">
             💡 Dica: Cole o link de uma imagem da internet (Google Imagens, Unsplash, etc)
           </p>
-        </div>
-      )}
-
-      {/* Sugestões */}
-      {showSuggestions && !value && (
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {suggestedImages.map((img) => (
-            <button
-              key={img.name}
-              type="button"
-              onClick={() => {
-                onChange(img.url);
-                setShowSuggestions(false);
-              }}
-              className="relative rounded-lg overflow-hidden border-2 border-zinc-700 hover:border-gold-500 transition-colors group"
-            >
-              <img 
-                src={img.url} 
-                alt={img.name}
-                className="w-full h-24 object-cover"
-              />
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-white font-medium text-sm">{img.name}</span>
-              </div>
-            </button>
-          ))}
         </div>
       )}
 

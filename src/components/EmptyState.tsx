@@ -2,11 +2,14 @@ import { Target, TrendingUp, DollarSign, Calendar } from 'lucide-react';
 
 interface EmptyStateProps {
   onCreateClick: () => void;
+  onControlClick?: () => void;
+  onProgressClick?: () => void;
+  onDeadlineClick?: () => void;
 }
 
-export default function EmptyState({ onCreateClick }: EmptyStateProps) {
+export default function EmptyState({ onCreateClick, onControlClick, onProgressClick, onDeadlineClick }: EmptyStateProps) {
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
+    <div className="flex items-center justify-center py-4">
       <div className="max-w-md w-full text-center">
         {/* Animated Icon */}
         <div className="relative mb-8">
@@ -31,7 +34,11 @@ export default function EmptyState({ onCreateClick }: EmptyStateProps) {
 
         {/* Features */}
         <div className="grid grid-cols-1 gap-4 mb-8">
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 flex items-center gap-3 hover:border-gold-500/50 transition-colors">
+          <button
+            onClick={onControlClick}
+            className={`bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 flex items-center gap-3 hover:border-gold-500/50 transition-all ${onControlClick ? 'cursor-pointer hover:bg-zinc-900 hover:scale-105' : ''}`}
+            disabled={!onControlClick}
+          >
             <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center flex-shrink-0">
               <DollarSign className="text-gold-400" size={20} />
             </div>
@@ -39,9 +46,13 @@ export default function EmptyState({ onCreateClick }: EmptyStateProps) {
               <p className="font-semibold text-white text-sm">Controle Total</p>
               <p className="text-zinc-500 text-xs">Acompanhe cada centavo investido</p>
             </div>
-          </div>
+          </button>
 
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 flex items-center gap-3 hover:border-gold-500/50 transition-colors">
+          <button
+            onClick={onProgressClick}
+            className={`bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 flex items-center gap-3 hover:border-gold-500/50 transition-all ${onProgressClick ? 'cursor-pointer hover:bg-zinc-900 hover:scale-105' : ''}`}
+            disabled={!onProgressClick}
+          >
             <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center flex-shrink-0">
               <TrendingUp className="text-gold-400" size={20} />
             </div>
@@ -49,9 +60,13 @@ export default function EmptyState({ onCreateClick }: EmptyStateProps) {
               <p className="font-semibold text-white text-sm">Progresso Visual</p>
               <p className="text-zinc-500 text-xs">Veja seu avanço em tempo real</p>
             </div>
-          </div>
+          </button>
 
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 flex items-center gap-3 hover:border-gold-500/50 transition-colors">
+          <button
+            onClick={onDeadlineClick}
+            className={`bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 flex items-center gap-3 hover:border-gold-500/50 transition-all ${onDeadlineClick ? 'cursor-pointer hover:bg-zinc-900 hover:scale-105' : ''}`}
+            disabled={!onDeadlineClick}
+          >
             <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center flex-shrink-0">
               <Calendar className="text-gold-400" size={20} />
             </div>
@@ -59,7 +74,7 @@ export default function EmptyState({ onCreateClick }: EmptyStateProps) {
               <p className="font-semibold text-white text-sm">Prazos & Metas</p>
               <p className="text-zinc-500 text-xs">Organize e priorize seus objetivos</p>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* CTA Button */}
