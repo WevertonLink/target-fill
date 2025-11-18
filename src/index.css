@@ -5,6 +5,20 @@
 @layer base {
   body {
     @apply bg-black text-white;
+    /* Suporte para safe area em dispositivos mobile */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Focus rings para acessibilidade */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply outline-none ring-2 ring-gold-500 ring-offset-2 ring-offset-black;
   }
 }
 

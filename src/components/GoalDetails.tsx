@@ -36,32 +36,40 @@ export default function GoalDetails({ goal, onClose, onDeletePayment }: GoalDeta
               />
             )}
 
-            <div className="bg-zinc-800 rounded-lg p-4 mb-4">
-              <div className="flex justify-between mb-2">
+            <div className="bg-zinc-800 rounded-lg p-4 mb-4 space-y-3">
+              <div className="flex justify-between items-center pb-3 border-b border-zinc-700">
                 <span className="text-zinc-400">Valor total</span>
-                <span className="text-white font-bold">R$ {goal.targetAmount.toFixed(2)}</span>
+                <span className="text-white font-bold text-lg">
+                  R$ {goal.targetAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
               </div>
-              <div className="flex justify-between mb-2">
-                <span className="text-zinc-400">Já pago</span>
-                <span className="text-green-400 font-bold">R$ {totalPaid.toFixed(2)}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-400">Dedicado</span>
+                <span className="text-green-400 font-bold text-lg">
+                  R$ {totalPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-400">Restante</span>
-                <span className="text-gold-400 font-bold">R$ {remaining.toFixed(2)}</span>
+              <div className="flex justify-between items-center pt-3 border-t border-zinc-700">
+                <span className="text-zinc-300 font-semibold">Falta atingir</span>
+                <span className="text-gold-400 font-bold text-xl">
+                  R$ {remaining.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
               </div>
             </div>
 
-            <h3 className="text-lg font-semibold mb-3 text-gold-400">Histórico de Pagamentos</h3>
-            
+            <h3 className="text-lg font-semibold mb-3 text-gold-400">Histórico de Valores Dedicados</h3>
+
             {goal.payments.length === 0 ? (
-              <p className="text-zinc-500 text-center py-4">Nenhum pagamento ainda</p>
+              <p className="text-zinc-500 text-center py-4">Nenhum valor dedicado ainda</p>
             ) : (
               <div className="space-y-2">
                 {[...goal.payments].reverse().map(payment => (
                   <div key={payment.id} className="bg-zinc-800 rounded-md p-3 flex justify-between items-center">
                     <div className="flex items-center gap-2 flex-1">
                       <DollarSign size={18} className="text-gold-400" />
-                      <span className="text-white font-semibold">R$ {payment.amount.toFixed(2)}</span>
+                      <span className="text-white font-semibold">
+                        R$ {payment.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1 text-zinc-400 text-sm">
@@ -90,12 +98,12 @@ export default function GoalDetails({ goal, onClose, onDeletePayment }: GoalDeta
               <div className="p-2 rounded-full bg-red-500/20 border border-red-500">
                 <Trash2 className="text-red-400" size={24} />
               </div>
-              <h3 className="font-bold text-white text-lg">Excluir Pagamento</h3>
+              <h3 className="font-bold text-white text-lg">Excluir Valor Dedicado</h3>
             </div>
-            
+
             <div className="p-4">
               <p className="text-zinc-300 text-sm leading-relaxed">
-                Tem certeza que deseja excluir este pagamento? Esta ação não pode ser desfeita.
+                Tem certeza que deseja excluir este valor dedicado? Esta ação não pode ser desfeita.
               </p>
             </div>
 

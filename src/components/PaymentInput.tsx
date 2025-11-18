@@ -47,13 +47,14 @@ export default function PaymentInput({ goalName, remaining, onConfirm, onCancel 
               <DollarSign className="text-gold-400" size={24} />
             </div>
             <div>
-              <h3 className="font-bold text-white text-lg">Adicionar Pagamento</h3>
+              <h3 className="font-bold text-white text-lg">Dedicar Valor</h3>
               <p className="text-sm text-zinc-400">{goalName}</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={onCancel}
-            className="text-zinc-400 hover:text-white transition-colors"
+            className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+            aria-label="Fechar"
           >
             <X size={20} />
           </button>
@@ -63,7 +64,7 @@ export default function PaymentInput({ goalName, remaining, onConfirm, onCancel 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {/* Info */}
           <div className="bg-zinc-800/50 rounded-lg p-3 border border-zinc-700">
-            <p className="text-sm text-zinc-400">Falta pagar:</p>
+            <p className="text-sm text-zinc-400">Falta dedicar:</p>
             <p className="text-2xl font-bold text-gold-400">
               R$ {remaining.toFixed(2)}
             </p>
@@ -72,7 +73,7 @@ export default function PaymentInput({ goalName, remaining, onConfirm, onCancel 
           {/* Input */}
           <div>
             <label className="block text-sm font-medium text-zinc-300 mb-2">
-              Quanto deseja pagar?
+              Quanto deseja dedicar?
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-lg">
@@ -110,10 +111,10 @@ export default function PaymentInput({ goalName, remaining, onConfirm, onCancel 
                   type="button"
                   onClick={() => handleQuickAmount(value)}
                   disabled={value > remaining}
-                  className={`py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                  className={`min-h-[44px] py-2 px-3 rounded-md text-sm font-medium transition-all ${
                     value > remaining
                       ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
-                      : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-gold-400 border border-zinc-700 hover:border-gold-500'
+                      : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-gold-400 border border-zinc-700 hover:border-gold-500 active:scale-95'
                   }`}
                 >
                   R$ {value}
@@ -127,13 +128,13 @@ export default function PaymentInput({ goalName, remaining, onConfirm, onCancel 
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+              className="flex-1 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-white min-h-[48px] py-3 px-4 rounded-lg font-medium transition-all"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 bg-gold-500 hover:bg-gold-600 text-black py-3 px-4 rounded-lg font-medium transition-colors"
+              className="flex-1 bg-gold-500 hover:bg-gold-600 active:scale-95 text-black min-h-[48px] py-3 px-4 rounded-lg font-medium transition-all"
             >
               Confirmar
             </button>

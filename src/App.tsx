@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Plus, Target, Menu, X, ArrowUpDown, Eye, EyeOff, Home } from 'lucide-react';
+import { Plus, Target, Menu, X, ArrowUpDown, Eye, EyeOff, Home, Grid3x3, LayoutList } from 'lucide-react';
 import GoalCard from './components/GoalCard';
 import GoalDetails from './components/GoalDetails';
 import EditGoal from './components/EditGoal';
 import ConfirmModal from './components/ConfirmModal';
 import EmptyState from './components/EmptyState';
 import ImageInput from './components/ImageInput';
+import ToastContainer from './components/ToastContainer';
+import { useToast } from './hooks/useToast';
 import type { Goal } from './types';
 
 // Storage inline para evitar problemas de cache
@@ -86,6 +88,7 @@ const storage = {
 };
 
 type SortType = 'recent' | 'progress' | 'deadline' | 'amount';
+type ViewMode = 'grid' | 'list';
 
 interface ConfirmState {
   show: boolean;
@@ -103,7 +106,8 @@ function App() {
       return [];
     }
   });
-  
+
+  const [showWelcomeHub, setShowWelcomeHub] = useState(true);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -111,7 +115,7 @@ function App() {
   const [showMenu, setShowMenu] = useState(false);
   const [sortBy, setSortBy] = useState<SortType>('recent');
   const [hideCompleted, setHideCompleted] = useState(false);
-  const [showAboutModal, setShowAboutModal] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [confirmModal, setConfirmModal] = useState<ConfirmState>({
     show: false,
     title: '',
@@ -120,11 +124,13 @@ function App() {
     onConfirm: () => {}
   });
 
+  const toast = useToast();
+
   const loadGoals = () => {
     try {
       const updatedGoals = storage.getGoals();
       setGoals(updatedGoals);
-      
+
       if (selectedGoal) {
         const updatedSelectedGoal = updatedGoals.find(g => g.id === selectedGoal.id);
         setSelectedGoal(updatedSelectedGoal || null);
@@ -132,6 +138,21 @@ function App() {
     } catch (error) {
       console.error('Erro ao carregar:', error);
     }
+  };
+
+  const handleHomeClick = () => {
+    // Fecha todos os modais e volta para o hub de boas-vindas
+    setSelectedGoal(null);
+    setEditingGoal(null);
+    setShowCreateModal(false);
+    setShowMenu(false);
+    setShowWelcomeHub(true);
+  };
+
+  const handleGoToGoals = () => {
+    // Vai para a seção de metas
+    setShowWelcomeHub(false);
+    setShowMenu(false);
   };
 
   const showConfirm = (title: string, message: string, type: 'danger' | 'warning' | 'info' | 'success', onConfirm: () => void) => {
@@ -145,10 +166,11 @@ function App() {
   const handleCreateGoal = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
+
     try {
+      const goalName = formData.get('name') as string;
       storage.addGoal({
-        name: formData.get('name') as string,
+        name: goalName,
         targetAmount: parseFloat(formData.get('amount') as string),
         imageUrl: newGoalImage,
         isPurchased: formData.get('mode') === 'purchased',
@@ -160,9 +182,12 @@ function App() {
       setShowCreateModal(false);
       setNewGoalImage('');
       e.currentTarget.reset();
+      setShowWelcomeHub(false); // Vai para a seção de metas após criar
+
+      toast.success(`✓ Meta "${goalName}" criada com sucesso!`);
     } catch (error) {
       console.error('Erro:', error);
-      showConfirm('Erro', 'Não foi possível criar a meta', 'danger', () => hideConfirm());
+      toast.error('Não foi possível criar a meta');
     }
   };
 
@@ -176,20 +201,29 @@ function App() {
         storage.updateGoal(editingGoal.id, updates);
         loadGoals();
         setEditingGoal(null);
+        toast.success('✓ Meta atualizada com sucesso!');
       } catch (error) {
         console.error('Erro:', error);
-        showConfirm('Erro', 'Não foi possível atualizar a meta', 'danger', () => hideConfirm());
+        toast.error('Não foi possível atualizar a meta');
       }
     }
   };
 
   const handleAddPayment = (goalId: string, amount: string) => {
     try {
-      storage.addPayment(goalId, amount);
+      const payment = storage.addPayment(goalId, amount);
       loadGoals();
+
+      if (payment) {
+        const formattedAmount = payment.amount.toLocaleString('pt-BR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+        toast.success(`✓ R$ ${formattedAmount} adicionados com sucesso!`);
+      }
     } catch (error) {
       console.error('Erro:', error);
-      showConfirm('Erro', 'Não foi possível adicionar o pagamento', 'danger', () => hideConfirm());
+      toast.error('Não foi possível adicionar o pagamento');
     }
   };
 
@@ -203,8 +237,10 @@ function App() {
           storage.deleteGoal(goalId);
           loadGoals();
           hideConfirm();
+          toast.success('✓ Meta excluída com sucesso!');
         } catch (error) {
           console.error('Erro:', error);
+          toast.error('Não foi possível excluir a meta');
         }
       }
     );
@@ -212,13 +248,17 @@ function App() {
 
   const handleDeletePayment = (paymentId: string) => {
     if (!selectedGoal) return;
-    
+
     try {
-      storage.deletePayment(selectedGoal.id, paymentId);
+      const success = storage.deletePayment(selectedGoal.id, paymentId);
       loadGoals();
+
+      if (success) {
+        toast.success('✓ Pagamento excluído com sucesso!');
+      }
     } catch (error) {
       console.error('Erro ao excluir pagamento:', error);
-      showConfirm('Erro', 'Não foi possível excluir o pagamento', 'danger', () => hideConfirm());
+      toast.error('Não foi possível excluir o pagamento');
     }
   };
 
@@ -288,22 +328,25 @@ function App() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowAboutModal(true)}
-              className="p-2 hover:bg-zinc-800 rounded-md transition-colors"
+              onClick={handleHomeClick}
+              className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-zinc-800 rounded-md transition-colors"
               title="Início"
+              aria-label="Voltar para página inicial"
             >
               <Home size={24} className="text-gold-400" />
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-gold-500 hover:bg-gold-600 text-black font-semibold px-4 py-2 rounded-md flex items-center gap-2"
+              className="bg-gold-500 hover:bg-gold-600 active:scale-95 text-black font-semibold px-4 py-3 min-h-[44px] rounded-md flex items-center gap-2 transition-all"
+              aria-label="Criar nova meta"
             >
               <Plus size={20} />
               <span className="hidden sm:inline">Nova Meta</span>
             </button>
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-2 hover:bg-zinc-800 rounded-md"
+              className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-zinc-800 rounded-md transition-colors"
+              aria-label={showMenu ? 'Fechar menu' : 'Abrir menu'}
             >
               {showMenu ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -316,7 +359,7 @@ function App() {
               <p className="font-semibold text-gold-400 mb-1">📊 Estatísticas</p>
               <div className="pl-2 space-y-0.5 text-xs">
                 <p>Metas: {stats.totalGoals} | Concluídas: {stats.completedGoals}</p>
-                <p>Total investido: R$ {stats.totalPaid.toFixed(2)}</p>
+                <p>Total investido: R$ {stats.totalPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
 
@@ -381,7 +424,7 @@ function App() {
               </div>
             </div>
 
-            <div className="pt-2 border-t border-zinc-700">
+            <div className="pt-2 border-t border-zinc-700 space-y-2">
               <button
                 onClick={() => {
                   setHideCompleted(!hideCompleted);
@@ -399,39 +442,64 @@ function App() {
                 </span>
                 <span>{hideCompleted ? 'ON' : 'OFF'}</span>
               </button>
+
+              <button
+                onClick={() => {
+                  setViewMode(viewMode === 'grid' ? 'list' : 'grid');
+                  setShowMenu(false);
+                }}
+                className={`w-full px-3 py-2 rounded-md text-sm flex items-center justify-between ${
+                  viewMode === 'grid'
+                    ? 'bg-gold-500 text-black font-semibold'
+                    : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  {viewMode === 'grid' ? <Grid3x3 size={16} /> : <LayoutList size={16} />}
+                  Visualização
+                </span>
+                <span>{viewMode === 'grid' ? 'Grid' : 'Lista'}</span>
+              </button>
             </div>
           </div>
         )}
       </header>
 
       <main className="max-w-4xl mx-auto p-4">
-        {displayGoals.length === 0 ? (
-          goals.length === 0 ? (
-            <EmptyState onCreateClick={() => setShowCreateModal(true)} />
-          ) : (
-            <div className="text-center py-16">
-              <Target size={64} className="text-zinc-700 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-zinc-600 mb-2">
-                Nenhuma meta para exibir
-              </h2>
-              <p className="text-zinc-500 mb-6">
-                Ajuste os filtros no menu
-              </p>
-            </div>
-          )
+        {showWelcomeHub ? (
+          <EmptyState
+            onCreateClick={() => setShowCreateModal(true)}
+            onViewGoalsClick={goals.length > 0 ? handleGoToGoals : undefined}
+            goalsCount={goals.length}
+          />
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {displayGoals.map(goal => (
-              <GoalCard
-                key={goal.id}
-                goal={goal}
-                onAddPayment={handleAddPayment}
-                onDelete={handleDeleteGoal}
-                onEdit={handleEditGoal}
-                onClick={() => setSelectedGoal(goal)}
-              />
-            ))}
-          </div>
+          <>
+            {displayGoals.length === 0 ? (
+              <div className="text-center py-16">
+                <Target size={64} className="text-zinc-700 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-zinc-600 mb-2">
+                  Nenhuma meta para exibir
+                </h2>
+                <p className="text-zinc-500 mb-6">
+                  Ajuste os filtros no menu
+                </p>
+              </div>
+            ) : (
+              <div className={viewMode === 'grid' ? 'grid gap-3 grid-cols-2' : 'flex flex-col gap-4'}>
+                {displayGoals.map(goal => (
+                  <GoalCard
+                    key={goal.id}
+                    goal={goal}
+                    onAddPayment={handleAddPayment}
+                    onDelete={handleDeleteGoal}
+                    onEdit={handleEditGoal}
+                    onClick={() => setSelectedGoal(goal)}
+                    compact={viewMode === 'grid'}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
 
@@ -512,13 +580,13 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 bg-zinc-800 hover:bg-zinc-700 py-2 rounded-md"
+                  className="flex-1 bg-zinc-800 hover:bg-zinc-700 active:scale-95 min-h-[48px] py-3 rounded-md transition-all font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-gold-500 hover:bg-gold-600 text-black font-semibold py-2 rounded-md"
+                  className="flex-1 bg-gold-500 hover:bg-gold-600 active:scale-95 text-black font-semibold min-h-[48px] py-3 rounded-md transition-all"
                 >
                   Criar
                 </button>
@@ -557,38 +625,7 @@ function App() {
         />
       )}
 
-      {showAboutModal && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
-          <div className="bg-zinc-900 rounded-lg max-w-md w-full p-6 border border-zinc-800 relative">
-            <button
-              onClick={() => setShowAboutModal(false)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors"
-            >
-              <X size={24} />
-            </button>
-
-            <EmptyState
-              onCreateClick={() => {
-                setShowAboutModal(false);
-                setShowCreateModal(true);
-              }}
-              onControlClick={() => {
-                setShowAboutModal(false);
-                setHideCompleted(false);
-                setSortBy('recent');
-              }}
-              onProgressClick={() => {
-                setShowAboutModal(false);
-                setSortBy('progress');
-              }}
-              onDeadlineClick={() => {
-                setShowAboutModal(false);
-                setSortBy('deadline');
-              }}
-            />
-          </div>
-        </div>
-      )}
+      <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
     </div>
   );
 }
