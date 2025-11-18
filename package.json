@@ -1,8 +1,11 @@
 {
   "name": "target-fill",
-  "private": true,
-  "version": "2.2.0",
+  "private": false,
+  "version": "2.3.0",
   "type": "module",
+  "author": "Weverton Link",
+  "description": "Organize e acompanhe suas metas financeiras de forma simples e visual",
+  "license": "MIT",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -b && vite build",

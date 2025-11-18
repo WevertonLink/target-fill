@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Edit2, Trash2, Calendar, Tag } from 'lucide-react';
+import { Edit2, Trash2, Calendar, Tag, Target } from 'lucide-react';
 import PaymentInput from './PaymentInput';
 import type { Goal } from '../types';
 
@@ -45,20 +45,24 @@ export default function GoalCard({ goal, onAddPayment, onDelete, onEdit, onClick
         onClick={onClick}
         className="bg-zinc-900 rounded-lg overflow-hidden border border-zinc-800 hover:border-gold-500 transition-all cursor-pointer"
       >
-        {goal.imageUrl && (
-          <div className={`relative ${compact ? 'h-32' : 'h-48'} overflow-hidden bg-zinc-800`}>
+        <div className={`relative ${compact ? 'h-32' : 'h-48'} overflow-hidden bg-zinc-800`}>
+          {goal.imageUrl ? (
             <img
               src={goal.imageUrl}
               alt={goal.name}
               className="w-full h-full object-cover"
             />
-            {isComplete && (
-              <div className="absolute inset-0 bg-gold-500/20 backdrop-blur-sm flex items-center justify-center">
-                <span className={compact ? 'text-4xl' : 'text-6xl'}>🎉</span>
-              </div>
-            )}
-          </div>
-        )}
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900">
+              <Target size={compact ? 48 : 64} className="text-zinc-700" strokeWidth={1.5} />
+            </div>
+          )}
+          {isComplete && (
+            <div className="absolute inset-0 bg-gold-500/20 backdrop-blur-sm flex items-center justify-center">
+              <span className={compact ? 'text-4xl' : 'text-6xl'}>🎉</span>
+            </div>
+          )}
+        </div>
 
         <div className={compact ? 'p-2' : 'p-4'}>
           <div className={`flex justify-between items-start ${compact ? 'mb-2' : 'mb-3'}`}>
