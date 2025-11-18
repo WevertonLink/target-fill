@@ -17,14 +17,36 @@ export default function EmptyState({
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
       <div className="max-w-md w-full text-center px-4">
-        {/* Compact Animated Icon */}
-        <div className="relative mb-6">
+        {/* Elegant Animated Logo */}
+        <div className="relative mb-8">
+          {/* Outer glow ring */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-24 h-24 bg-gold-500/10 rounded-full animate-pulse" />
+            <div className="w-32 h-32 bg-gold-500/5 rounded-full animate-pulse" />
           </div>
+
+          {/* Middle glow ring */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-28 h-28 bg-gold-500/10 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+          </div>
+
+          {/* Main logo container */}
           <div className="relative flex items-center justify-center">
-            <div className="w-24 h-24 bg-gradient-to-br from-gold-500 to-gold-600 rounded-full flex items-center justify-center shadow-xl shadow-gold-500/30">
-              <Target size={48} className="text-black" strokeWidth={2.5} />
+            {/* Gradient background circle */}
+            <div className="w-28 h-28 bg-gradient-to-br from-gold-400 via-gold-500 to-amber-600 rounded-full flex items-center justify-center shadow-2xl shadow-gold-500/40 relative overflow-hidden">
+              {/* Shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent animate-pulse" />
+
+              {/* Target rings */}
+              <div className="relative flex items-center justify-center w-full h-full">
+                <div className="absolute w-20 h-20 border-2 border-black/10 rounded-full" />
+                <div className="absolute w-14 h-14 border-2 border-black/15 rounded-full" />
+                <div className="absolute w-8 h-8 border-2 border-black/20 rounded-full" />
+
+                {/* Center icon */}
+                <div className="relative">
+                  <Target size={40} className="text-black drop-shadow-lg" strokeWidth={2.5} />
+                </div>
+              </div>
             </div>
           </div>
         </div>

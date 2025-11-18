@@ -319,7 +319,7 @@ function App() {
   const stats = getStats();
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
+    <div className="min-h-screen bg-black text-white">
       <header
         className="bg-zinc-900 border-b border-zinc-800 p-4 sticky z-40"
         style={{ top: 'env(safe-area-inset-top, 0px)' }}
