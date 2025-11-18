@@ -21,30 +21,30 @@ export default function EmptyState({
         <div className="relative mb-8">
           {/* Outer glow ring */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-32 h-32 bg-gold-500/5 rounded-full animate-pulse" />
+            <div className="w-40 h-40 bg-gold-500/5 rounded-full animate-pulse" />
           </div>
 
           {/* Middle glow ring */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-28 h-28 bg-gold-500/10 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+            <div className="w-36 h-36 bg-gold-500/10 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
           </div>
 
           {/* Main logo container */}
           <div className="relative flex items-center justify-center">
             {/* Gradient background circle */}
-            <div className="w-28 h-28 bg-gradient-to-br from-gold-400 via-gold-500 to-amber-600 rounded-full flex items-center justify-center shadow-2xl shadow-gold-500/40 relative overflow-hidden">
+            <div className="w-32 h-32 bg-gradient-to-br from-gold-400 via-gold-500 to-amber-600 rounded-full flex items-center justify-center shadow-2xl shadow-gold-500/50 relative overflow-hidden">
               {/* Shine effect */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent animate-pulse" />
 
-              {/* Target rings */}
+              {/* Target rings - maiores e mais espalhados */}
               <div className="relative flex items-center justify-center w-full h-full">
-                <div className="absolute w-20 h-20 border-2 border-black/10 rounded-full" />
-                <div className="absolute w-14 h-14 border-2 border-black/15 rounded-full" />
-                <div className="absolute w-8 h-8 border-2 border-black/20 rounded-full" />
+                <div className="absolute w-28 h-28 border-[3px] border-black/25 rounded-full" />
+                <div className="absolute w-20 h-20 border-[3px] border-black/30 rounded-full" />
+                <div className="absolute w-12 h-12 border-[3px] border-black/35 rounded-full" />
 
                 {/* Center icon */}
                 <div className="relative">
-                  <Target size={40} className="text-black drop-shadow-lg" strokeWidth={2.5} />
+                  <Target size={32} className="text-black drop-shadow-xl" strokeWidth={3} />
                 </div>
               </div>
             </div>
