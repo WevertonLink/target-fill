@@ -6,12 +6,18 @@ if ! command -v convert &> /dev/null; then
     pkg install imagemagick -y
 fi
 
+# Remover XMLs conflitantes que podem ter prioridade sobre os PNGs
+echo "🧹 Removendo XMLs conflitantes..."
+rm -f android/app/src/main/res/drawable/ic_launcher_background.xml
+rm -f android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml
+
 # Criar diretórios
 mkdir -p android/app/src/main/res/mipmap-mdpi
 mkdir -p android/app/src/main/res/mipmap-hdpi
 mkdir -p android/app/src/main/res/mipmap-xhdpi
 mkdir -p android/app/src/main/res/mipmap-xxhdpi
 mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+mkdir -p android/app/src/main/res/drawable
 
 # Gerar ícones em diferentes resoluções
 echo "📱 Gerando ícones..."
@@ -43,5 +49,14 @@ convert assets/icon/icon.svg -resize 192x192 android/app/src/main/res/mipmap-xxx
 
 # Ícone da Play Store - 512x512
 convert assets/icon/icon.svg -resize 512x512 assets/icon/playstore.png
+
+# Criar background drawable preto para adaptive icon
+echo "🎨 Criando background drawable..."
+cat > android/app/src/main/res/drawable/ic_launcher_background.xml << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#000000"/>
+</shape>
+EOF
 
 echo "✅ Ícones gerados com sucesso!"
