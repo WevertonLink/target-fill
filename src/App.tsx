@@ -330,7 +330,12 @@ function App() {
       >
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Target className="text-gold-400" size={28} />
+            <img
+              src="/logo-icon.png"
+              alt="Target-Fill"
+              className="w-8 h-8 object-contain"
+              style={{ filter: 'drop-shadow(0 0 8px rgba(255, 215, 0, 0.4))' }}
+            />
             <h1 className="text-2xl font-bold text-gold-400">Target-Fill</h1>
           </div>
           <div className="flex items-center gap-2">
