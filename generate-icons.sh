@@ -1,17 +1,22 @@
 #!/bin/bash
 
 # Verificar se ImageMagick está instalado
-if ! command -v convert &> /dev/null; then
+if ! command -v magick &> /dev/null && ! command -v convert &> /dev/null; then
     echo "❌ ImageMagick não encontrado. Instalando..."
     pkg install imagemagick -y
 fi
 
-# Remover XMLs conflitantes e adaptive icon (usa PNGs diretos)
-echo "🧹 Removendo XMLs e adaptive icon (usando PNGs diretos)..."
+# Usar 'magick' se disponível, senão usar 'convert'
+MAGICK_CMD="magick"
+if ! command -v magick &> /dev/null; then
+    MAGICK_CMD="convert"
+fi
+
+# Remover XMLs conflitantes (mas MANTER adaptive icons!)
+echo "🧹 Removendo XMLs conflitantes..."
 rm -f android/app/src/main/res/drawable/ic_launcher_background.xml
 rm -f android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml
 rm -f android/app/src/main/res/values/ic_launcher_background.xml
-rm -rf android/app/src/main/res/mipmap-anydpi-v26
 
 # Criar diretórios
 mkdir -p android/app/src/main/res/mipmap-mdpi
@@ -20,36 +25,44 @@ mkdir -p android/app/src/main/res/mipmap-xhdpi
 mkdir -p android/app/src/main/res/mipmap-xxhdpi
 mkdir -p android/app/src/main/res/mipmap-xxxhdpi
 
-# Gerar ícones em diferentes resoluções (removendo transparência)
-echo "📱 Gerando ícones sem transparência..."
+# Gerar ícones em diferentes resoluções COM transparência (RGBA)
+echo "📱 Gerando ícones Android com transparência para adaptive icons..."
+
+# Fonte: usar PNG 512x512 que tem transparência correta
+SOURCE_ICON="assets/icon/icon-512.png"
 
 # MDPI - 48x48
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher.png
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png
+echo "  → Gerando MDPI (48x48)..."
+$MAGICK_CMD "$SOURCE_ICON" -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png
+$MAGICK_CMD "$SOURCE_ICON" -background black -flatten -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+$MAGICK_CMD "$SOURCE_ICON" -background black -flatten -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
 
 # HDPI - 72x72
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher.png
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png
+echo "  → Gerando HDPI (72x72)..."
+$MAGICK_CMD "$SOURCE_ICON" -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png
+$MAGICK_CMD "$SOURCE_ICON" -background black -flatten -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+$MAGICK_CMD "$SOURCE_ICON" -background black -flatten -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
 
 # XHDPI - 96x96
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png
+echo "  → Gerando XHDPI (96x96)..."
+$MAGICK_CMD "$SOURCE_ICON" -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png
+$MAGICK_CMD "$SOURCE_ICON" -background black -flatten -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+$MAGICK_CMD "$SOURCE_ICON" -background black -flatten -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
 
 # XXHDPI - 144x144
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png
+echo "  → Gerando XXHDPI (144x144)..."
+$MAGICK_CMD "$SOURCE_ICON" -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png
+$MAGICK_CMD "$SOURCE_ICON" -background black -flatten -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+$MAGICK_CMD "$SOURCE_ICON" -background black -flatten -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
 
 # XXXHDPI - 192x192
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
-convert assets/icon/icon.svg -background none -alpha remove -alpha off -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
+echo "  → Gerando XXXHDPI (192x192)..."
+$MAGICK_CMD "$SOURCE_ICON" -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
+$MAGICK_CMD "$SOURCE_ICON" -background black -flatten -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+$MAGICK_CMD "$SOURCE_ICON" -background black -flatten -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
 
-# Ícone da Play Store - 512x512
-convert assets/icon/icon.svg -resize 512x512 assets/icon/playstore.png
-
-echo "✅ Ícones gerados com sucesso!"
-echo "ℹ️  Usando PNGs diretos (adaptive icon desativado para mostrar ícone completo)"
+echo ""
+echo "✅ Ícones Android gerados com sucesso!"
+echo "✓ ic_launcher_foreground.png: RGBA com transparência (para adaptive icons)"
+echo "✓ ic_launcher.png: Com fundo preto"
+echo "✓ ic_launcher_round.png: Com fundo preto"
