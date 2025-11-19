@@ -7,6 +7,8 @@ import ConfirmModal from './components/ConfirmModal';
 import EmptyState from './components/EmptyState';
 import ImageInput from './components/ImageInput';
 import ToastContainer from './components/ToastContainer';
+import StatsModal from './components/StatsModal';
+import AchievementsModal from './components/AchievementsModal';
 import { useToast } from './hooks/useToast';
 import type { Goal } from './types';
 
@@ -116,6 +118,8 @@ function App() {
   const [sortBy, setSortBy] = useState<SortType>('recent');
   const [hideCompleted, setHideCompleted] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [showAchievementsModal, setShowAchievementsModal] = useState(false);
   const [confirmModal, setConfirmModal] = useState<ConfirmState>({
     show: false,
     title: '',
@@ -473,7 +477,8 @@ function App() {
           <EmptyState
             onCreateClick={() => setShowCreateModal(true)}
             onViewGoalsClick={goals.length > 0 ? handleGoToGoals : undefined}
-            goalsCount={goals.length}
+            onStatsClick={() => setShowStatsModal(true)}
+            onAchievementsClick={() => setShowAchievementsModal(true)}
           />
         ) : (
           <>
@@ -625,6 +630,20 @@ function App() {
             hideConfirm();
           }}
           onCancel={hideConfirm}
+        />
+      )}
+
+      {showStatsModal && (
+        <StatsModal
+          goals={goals}
+          onClose={() => setShowStatsModal(false)}
+        />
+      )}
+
+      {showAchievementsModal && (
+        <AchievementsModal
+          goals={goals}
+          onClose={() => setShowAchievementsModal(false)}
         />
       )}
 
