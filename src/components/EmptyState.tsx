@@ -20,18 +20,23 @@ export default function EmptyState({
         <div className="relative mb-6 flex items-center justify-center">
           {/* Glow animado de fundo */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-48 h-48 bg-gradient-to-r from-gold-500/30 via-gold-400/20 to-gold-500/30 rounded-full blur-3xl animate-pulse"
+            <div className="w-56 h-56 bg-gradient-to-r from-gold-500/20 via-gold-400/30 to-gold-500/20 rounded-full blur-3xl animate-pulse"
                  style={{ animationDuration: '3s' }} />
           </div>
 
-          {/* Logo Image */}
-          <div className="relative w-48 h-48 flex items-center justify-center">
+          {/* Logo Image Container com integração aprimorada */}
+          <div className="relative w-48 h-48 flex items-center justify-center rounded-3xl overflow-hidden"
+               style={{
+                 background: 'radial-gradient(circle at center, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 40%, transparent 70%)'
+               }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-gold-500/5 via-transparent to-gold-500/5 backdrop-blur-[1px]" />
             <img
               src="/logo-welcome.png"
               alt="Target-Fill Logo"
-              className="w-full h-full object-contain animate-fade-in"
+              className="relative w-full h-full object-contain animate-fade-in"
               style={{
-                filter: 'drop-shadow(0 0 40px rgba(255, 215, 0, 0.3))'
+                filter: 'drop-shadow(0 4px 20px rgba(255, 215, 0, 0.25)) contrast(1.1)',
+                mixBlendMode: 'screen'
               }}
             />
           </div>

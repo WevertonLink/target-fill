@@ -370,12 +370,18 @@ function App() {
       >
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img
-              src="/logo-icon.png"
-              alt="Target-Fill"
-              className="w-8 h-8 object-contain"
-              style={{ filter: 'drop-shadow(0 0 8px rgba(255, 215, 0, 0.4))' }}
-            />
+            <div className="relative w-8 h-8 flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-br from-gold-500/10 to-gold-600/10 rounded-lg blur-sm" />
+              <img
+                src="/logo-icon.png"
+                alt="Target-Fill"
+                className="relative w-full h-full object-contain"
+                style={{
+                  filter: 'drop-shadow(0 2px 6px rgba(255, 215, 0, 0.3)) contrast(1.05)',
+                  mixBlendMode: 'screen'
+                }}
+              />
+            </div>
             <h1 className="text-2xl font-bold text-gold-400">Target-Fill</h1>
           </div>
           <div className="flex items-center gap-2">

@@ -1,5 +1,7 @@
 package com.wevertonlink.targetfill;
 
+import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
@@ -15,7 +17,11 @@ public class MainActivity extends BridgeActivity {
 
         // Registrar broadcast receiver para transações
         transactionReceiver = new TransactionBroadcastReceiver(getBridge());
-        registerReceiver(transactionReceiver, TransactionBroadcastReceiver.getIntentFilter());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(transactionReceiver, TransactionBroadcastReceiver.getIntentFilter(), Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(transactionReceiver, TransactionBroadcastReceiver.getIntentFilter());
+        }
 
         // Configurar status bar
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
