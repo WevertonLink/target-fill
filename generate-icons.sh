@@ -14,9 +14,45 @@ fi
 
 # Remover XMLs conflitantes (mas MANTER adaptive icons!)
 echo "🧹 Removendo XMLs conflitantes..."
-rm -f android/app/src/main/res/drawable/ic_launcher_background.xml
 rm -f android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml
 rm -f android/app/src/main/res/values/ic_launcher_background.xml
+
+# Criar background gradiente para adaptive icons
+echo "🎨 Criando background gradiente para ícone launcher..."
+mkdir -p android/app/src/main/res/drawable
+cat > android/app/src/main/res/drawable/ic_launcher_background.xml << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background preto sólido -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#000000"/>
+        </shape>
+    </item>
+
+    <!-- Gradiente radial dourado sutil para profundidade -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="60%p"
+                android:centerColor="#1A1A1A"
+                android:endColor="#000000"/>
+        </shape>
+    </item>
+
+    <!-- Glow dourado sutil no centro -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="50%p"
+                android:centerColor="#1AFFD700"
+                android:endColor="#00000000"/>
+        </shape>
+    </item>
+</layer-list>
+EOF
 
 # Criar diretórios
 mkdir -p android/app/src/main/res/mipmap-mdpi
