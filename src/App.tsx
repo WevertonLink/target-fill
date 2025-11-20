@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Target, Menu, X, ArrowUpDown, Eye, EyeOff, Home, Grid3x3, LayoutList } from 'lucide-react';
+import { Plus, Target, Menu, X, ArrowUpDown, Eye, EyeOff, Home, Grid3x3, LayoutList, Bell, Zap } from 'lucide-react';
 import GoalCard from './components/GoalCard';
 import GoalDetails from './components/GoalDetails';
 import EditGoal from './components/EditGoal';
@@ -9,8 +9,12 @@ import ImageInput from './components/ImageInput';
 import ToastContainer from './components/ToastContainer';
 import StatsModal from './components/StatsModal';
 import AchievementsModal from './components/AchievementsModal';
+import TransactionModal from './components/TransactionModal';
+import AutoRulesModal from './components/AutoRulesModal';
 import { useToast } from './hooks/useToast';
+import { useNotificationListener } from './hooks/useNotificationListener';
 import type { Goal } from './types';
+import type { TransactionData } from './plugins/notificationListener';
 
 // Storage inline para evitar problemas de cache
 const STORAGE_KEY = 'target_fill_goals';
@@ -128,7 +132,28 @@ function App() {
     onConfirm: () => {}
   });
 
+  // Notification listener states
+  const [detectedTransaction, setDetectedTransaction] = useState<TransactionData | null>(null);
+  const [showAutoRulesModal, setShowAutoRulesModal] = useState(false);
+
   const toast = useToast();
+  const notificationListener = useNotificationListener((transaction) => {
+    // Callback quando uma transação é detectada
+    const suggestedGoalId = notificationListener.checkAutoRules(transaction);
+
+    if (suggestedGoalId) {
+      // Regra automática encontrada - aplica direto e notifica
+      const goal = goals.find(g => g.id === suggestedGoalId);
+      if (goal) {
+        handleAddPayment(suggestedGoalId, transaction.amount.toString());
+        toast.success(`✓ R$ ${transaction.amount.toFixed(2)} adicionado automaticamente a "${goal.name}"`);
+        return;
+      }
+    }
+
+    // Sem regra - mostra modal de confirmação
+    setDetectedTransaction(transaction);
+  });
 
   const loadGoals = () => {
     try {
@@ -264,6 +289,21 @@ function App() {
       console.error('Erro ao excluir pagamento:', error);
       toast.error('Não foi possível excluir o pagamento');
     }
+  };
+
+  const handleTransactionConfirm = (goalId: string, amount: number) => {
+    handleAddPayment(goalId, amount.toString());
+    setDetectedTransaction(null);
+  };
+
+  const handleCreateRuleFromTransaction = (bankSource: string, type: string, goalId: string) => {
+    notificationListener.addAutoRule({
+      bankSource,
+      transactionType: type as any,
+      targetGoalId: goalId,
+      enabled: true
+    });
+    toast.success('✓ Regra automática criada!');
   };
 
   const getSortedAndFilteredGoals = () => {
@@ -473,6 +513,48 @@ function App() {
                 <span>{viewMode === 'grid' ? 'Grid' : 'Lista'}</span>
               </button>
             </div>
+
+            <div className="pt-2 border-t border-zinc-700 space-y-2">
+              <p className="font-semibold text-gold-400 mb-2 flex items-center gap-2">
+                <Bell size={16} />
+                Notificações Bancárias
+              </p>
+
+              {!notificationListener.hasPermission ? (
+                <button
+                  onClick={() => {
+                    notificationListener.requestPermission();
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-3 py-2 rounded-md text-sm bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"
+                >
+                  <Bell size={16} />
+                  Ativar Detecção Automática
+                </button>
+              ) : (
+                <>
+                  <div className="bg-green-900/30 border border-green-700 rounded-md px-3 py-2 text-sm">
+                    <div className="flex items-center gap-2 text-green-400">
+                      <Bell size={16} />
+                      <span className="font-medium">Detecção Ativa</span>
+                    </div>
+                    <p className="text-xs text-green-300 mt-1">
+                      {notificationListener.autoRules.filter(r => r.enabled).length} regras ativas
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowAutoRulesModal(true);
+                      setShowMenu(false);
+                    }}
+                    className="w-full px-3 py-2 rounded-md text-sm bg-zinc-700 hover:bg-zinc-600 text-white flex items-center justify-center gap-2"
+                  >
+                    <Zap size={16} />
+                    Gerenciar Regras
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         )}
       </header>
@@ -649,6 +731,28 @@ function App() {
         <AchievementsModal
           goals={goals}
           onClose={() => setShowAchievementsModal(false)}
+        />
+      )}
+
+      {detectedTransaction && (
+        <TransactionModal
+          transaction={detectedTransaction}
+          goals={goals}
+          suggestedGoalId={notificationListener.checkAutoRules(detectedTransaction) || undefined}
+          onConfirm={handleTransactionConfirm}
+          onIgnore={() => setDetectedTransaction(null)}
+          onCreateRule={handleCreateRuleFromTransaction}
+        />
+      )}
+
+      {showAutoRulesModal && (
+        <AutoRulesModal
+          goals={goals}
+          rules={notificationListener.autoRules}
+          onAddRule={notificationListener.addAutoRule}
+          onRemoveRule={notificationListener.removeAutoRule}
+          onToggleRule={notificationListener.toggleAutoRule}
+          onClose={() => setShowAutoRulesModal(false)}
         />
       )}
 

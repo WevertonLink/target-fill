@@ -71,10 +71,23 @@
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .animate-spin-slow {
   animation: spin-slow 20s linear infinite;
 }
 
 .animate-gradient-x {
   animation: gradient-x 3s ease infinite;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in;
 }

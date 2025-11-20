@@ -1,0 +1,149 @@
+import { useEffect, useState } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
+import NotificationListener, { TransactionData } from '../plugins/notificationListener';
+
+interface AutoRule {
+  id: string;
+  bankSource: string;
+  transactionType: 'CREDIT' | 'DEBIT' | 'SAVINGS' | 'INVESTMENT' | 'OTHER';
+  categoryKeyword?: string;
+  targetGoalId: string;
+  enabled: boolean;
+}
+
+export function useNotificationListener(onTransactionDetected: (transaction: TransactionData) => void) {
+  const [hasPermission, setHasPermission] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  const [autoRules, setAutoRules] = useState<AutoRule[]>([]);
+
+  useEffect(() => {
+    // Carrega regras salvas
+    const loadRules = () => {
+      try {
+        const saved = localStorage.getItem('target_fill_auto_rules');
+        if (saved) {
+          setAutoRules(JSON.parse(saved));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar regras:', error);
+      }
+    };
+
+    // Verifica permissão ao montar
+    const checkPermission = async () => {
+      try {
+        const result = await NotificationListener.checkPermission();
+        setHasPermission(result.granted);
+        if (result.granted) {
+          const status = await NotificationListener.startListening();
+          setIsActive(status.active);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar permissão:', error);
+      }
+    };
+
+    loadRules();
+    checkPermission();
+
+    // Listener para broadcasts do Android
+    let listenerHandle: any = null;
+    CapacitorApp.addListener('appStateChange', ({ isActive }: { isActive: boolean }) => {
+      if (isActive) {
+        checkPermission();
+      }
+    }).then(handle => {
+      listenerHandle = handle;
+    });
+
+    // Listener para transações detectadas
+    const handleTransactionDetected = (event: any) => {
+      try {
+        const transaction: TransactionData = typeof event.detail === 'string'
+          ? JSON.parse(event.detail)
+          : event.detail;
+
+        console.log('Transação recebida:', transaction);
+        onTransactionDetected(transaction);
+      } catch (error) {
+        console.error('Erro ao processar transação:', error);
+      }
+    };
+
+    window.addEventListener('transactionDetected', handleTransactionDetected);
+
+    return () => {
+      if (listenerHandle) {
+        listenerHandle.remove();
+      }
+      window.removeEventListener('transactionDetected', handleTransactionDetected);
+    };
+  }, [onTransactionDetected]);
+
+  const requestPermission = async () => {
+    try {
+      await NotificationListener.requestPermission();
+      // Após o usuário voltar das configurações, verifica novamente
+      setTimeout(async () => {
+        const result = await NotificationListener.checkPermission();
+        setHasPermission(result.granted);
+      }, 1000);
+    } catch (error) {
+      console.error('Erro ao solicitar permissão:', error);
+    }
+  };
+
+  const saveAutoRules = (rules: AutoRule[]) => {
+    setAutoRules(rules);
+    localStorage.setItem('target_fill_auto_rules', JSON.stringify(rules));
+  };
+
+  const addAutoRule = (rule: Omit<AutoRule, 'id'>) => {
+    const newRule: AutoRule = {
+      ...rule,
+      id: Date.now().toString()
+    };
+    saveAutoRules([...autoRules, newRule]);
+  };
+
+  const removeAutoRule = (ruleId: string) => {
+    saveAutoRules(autoRules.filter(r => r.id !== ruleId));
+  };
+
+  const toggleAutoRule = (ruleId: string) => {
+    saveAutoRules(
+      autoRules.map(r =>
+        r.id === ruleId ? { ...r, enabled: !r.enabled } : r
+      )
+    );
+  };
+
+  const checkAutoRules = (transaction: TransactionData): string | null => {
+    // Verifica se alguma regra se aplica
+    for (const rule of autoRules) {
+      if (!rule.enabled) continue;
+
+      const matchesBank = rule.bankSource === 'all' || rule.bankSource === transaction.source;
+      const matchesType = rule.transactionType === transaction.type;
+      const matchesCategory = !rule.categoryKeyword ||
+        transaction.category?.toLowerCase().includes(rule.categoryKeyword.toLowerCase()) ||
+        transaction.description?.toLowerCase().includes(rule.categoryKeyword.toLowerCase());
+
+      if (matchesBank && matchesType && matchesCategory) {
+        return rule.targetGoalId;
+      }
+    }
+    return null;
+  };
+
+  return {
+    hasPermission,
+    isActive,
+    autoRules,
+    requestPermission,
+    addAutoRule,
+    removeAutoRule,
+    toggleAutoRule,
+    checkAutoRules
+  };
+}
