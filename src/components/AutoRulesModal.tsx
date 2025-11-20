@@ -23,6 +23,7 @@ interface AutoRulesModalProps {
 const BANK_OPTIONS = [
   { value: 'all', label: 'Todos os bancos' },
   { value: 'Nubank', label: 'Nubank' },
+  { value: 'Mercado Pago', label: 'Mercado Pago' },
   { value: 'Inter', label: 'Inter' },
   { value: 'C6 Bank', label: 'C6 Bank' },
   { value: 'Bradesco', label: 'Bradesco' },

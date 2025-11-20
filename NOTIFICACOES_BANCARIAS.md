@@ -58,7 +58,8 @@ Meta: Casamento
 
 ## 🏦 Bancos Suportados
 
-- ✅ Nubank
+- ✅ **Nubank** (principal)
+- ✅ **Mercado Pago** (principal)
 - ✅ Inter
 - ✅ C6 Bank
 - ✅ Bradesco

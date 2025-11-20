@@ -17,6 +17,7 @@ public class NotificationListener extends NotificationListenerService {
     // Apps bancários brasileiros
     private static final String[] BANK_PACKAGES = {
         "com.nu.production",           // Nubank
+        "com.mercadopago.wallet",      // Mercado Pago
         "br.com.intermedium",          // Inter
         "br.com.c6bank.app",           // C6 Bank
         "com.bradesco",                // Bradesco
@@ -162,6 +163,7 @@ public class NotificationListener extends NotificationListenerService {
     private String getBankName(String packageName) {
         switch (packageName) {
             case "com.nu.production": return "Nubank";
+            case "com.mercadopago.wallet": return "Mercado Pago";
             case "br.com.intermedium": return "Inter";
             case "br.com.c6bank.app": return "C6 Bank";
             case "com.bradesco": return "Bradesco";
