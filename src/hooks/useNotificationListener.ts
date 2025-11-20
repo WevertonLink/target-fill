@@ -50,11 +50,19 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
     let listenerHandle: any = null;
     CapacitorApp.addListener('appStateChange', ({ isActive }: { isActive: boolean }) => {
       if (isActive) {
-        checkPermission();
+        // Verifica permissão com delay para garantir que o Android atualizou
+        setTimeout(() => {
+          checkPermission();
+        }, 500);
       }
     }).then(handle => {
       listenerHandle = handle;
     });
+
+    // Verificação periódica a cada 3 segundos quando o app está ativo
+    const intervalId = setInterval(() => {
+      checkPermission();
+    }, 3000);
 
     // Listener para transações detectadas
     const handleTransactionDetected = (event: any) => {
@@ -76,6 +84,7 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
       if (listenerHandle) {
         listenerHandle.remove();
       }
+      clearInterval(intervalId);
       window.removeEventListener('transactionDetected', handleTransactionDetected);
     };
   }, [onTransactionDetected]);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Target, Menu, X, ArrowUpDown, Eye, EyeOff, Home, Grid3x3, LayoutList, Bell, Zap } from 'lucide-react';
+import { Plus, Target, Menu, X, ArrowUpDown, Eye, EyeOff, Home, Grid3x3, LayoutList, Bell, Zap, HelpCircle } from 'lucide-react';
 import GoalCard from './components/GoalCard';
 import GoalDetails from './components/GoalDetails';
 import EditGoal from './components/EditGoal';
@@ -11,6 +11,7 @@ import StatsModal from './components/StatsModal';
 import AchievementsModal from './components/AchievementsModal';
 import TransactionModal from './components/TransactionModal';
 import AutoRulesModal from './components/AutoRulesModal';
+import NotificationHelpModal from './components/NotificationHelpModal';
 import { useToast } from './hooks/useToast';
 import { useNotificationListener } from './hooks/useNotificationListener';
 import type { Goal } from './types';
@@ -135,6 +136,8 @@ function App() {
   // Notification listener states
   const [detectedTransaction, setDetectedTransaction] = useState<TransactionData | null>(null);
   const [showAutoRulesModal, setShowAutoRulesModal] = useState(false);
+  const [showNotificationHelp, setShowNotificationHelp] = useState(false);
+  const [requestingPermission, setRequestingPermission] = useState(false);
 
   const toast = useToast();
   const notificationListener = useNotificationListener((transaction) => {
@@ -521,21 +524,53 @@ function App() {
             </div>
 
             <div className="pt-2 border-t border-zinc-700 space-y-2">
-              <p className="font-semibold text-gold-400 mb-2 flex items-center gap-2">
-                <Bell size={16} />
-                Notificações Bancárias
-              </p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-semibold text-gold-400 flex items-center gap-2">
+                  <Bell size={16} />
+                  Notificações Bancárias
+                </p>
+                <button
+                  onClick={() => {
+                    setShowNotificationHelp(true);
+                    setShowMenu(false);
+                  }}
+                  className="p-1 hover:bg-zinc-700 rounded-md transition-colors"
+                  title="Como usar?"
+                >
+                  <HelpCircle size={16} className="text-zinc-400" />
+                </button>
+              </div>
 
               {!notificationListener.hasPermission ? (
                 <button
-                  onClick={() => {
-                    notificationListener.requestPermission();
-                    setShowMenu(false);
+                  onClick={async () => {
+                    try {
+                      setRequestingPermission(true);
+                      toast.success('Abrindo configurações...');
+                      await notificationListener.requestPermission();
+
+                      // Aguarda 2s e verifica se permissão foi concedida
+                      setTimeout(() => {
+                        setRequestingPermission(false);
+                        toast.success('Volte aqui após conceder a permissão');
+                      }, 2000);
+
+                      setShowMenu(false);
+                    } catch (error) {
+                      console.error('Erro ao solicitar permissão:', error);
+                      setRequestingPermission(false);
+                      toast.error('Erro ao abrir configurações');
+                    }
                   }}
-                  className="w-full px-3 py-2 rounded-md text-sm bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"
+                  disabled={requestingPermission}
+                  className={`w-full px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-all ${
+                    requestingPermission
+                      ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                      : 'bg-gold-500 hover:bg-gold-600 active:scale-95 text-black'
+                  }`}
                 >
-                  <Bell size={16} />
-                  Ativar Detecção Automática
+                  <Bell size={16} className={requestingPermission ? 'animate-pulse' : ''} />
+                  {requestingPermission ? 'Abrindo configurações...' : 'Ativar Detecção Automática'}
                 </button>
               ) : (
                 <>
@@ -759,6 +794,12 @@ function App() {
           onRemoveRule={notificationListener.removeAutoRule}
           onToggleRule={notificationListener.toggleAutoRule}
           onClose={() => setShowAutoRulesModal(false)}
+        />
+      )}
+
+      {showNotificationHelp && (
+        <NotificationHelpModal
+          onClose={() => setShowNotificationHelp(false)}
         />
       )}
 
