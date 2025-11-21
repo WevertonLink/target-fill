@@ -3,17 +3,20 @@ package com.wevertonlink.targetfill;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     private TransactionBroadcastReceiver transactionReceiver;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
+        // IMPORTANTE: registrar plugin ANTES de super.onCreate()
+        registerPlugin(NotificationListenerPlugin.class);
+
         super.onCreate(savedInstanceState);
 
-        // Registrar plugin customizado
-        registerPlugin(NotificationListenerPlugin.class);
+        Log.d("MainActivity", "NotificationListenerPlugin registrado");
 
         // Registrar broadcast receiver para transações
         transactionReceiver = new TransactionBroadcastReceiver(getBridge());
