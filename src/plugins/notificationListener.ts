@@ -1,4 +1,5 @@
-import { registerPlugin } from '@capacitor/core';
+import { registerPlugin, Capacitor } from '@capacitor/core';
+import { DebugLogger } from '../components/DebugModal';
 
 export interface TransactionData {
   amount: number;
@@ -27,18 +28,57 @@ export interface NotificationListenerPlugin {
   startListening(): Promise<{ active: boolean }>;
 }
 
-const NotificationListener = registerPlugin<NotificationListenerPlugin>('NotificationListener', {
-  web: () => ({
+// Wrapper que adiciona fallback e logging
+const createNotificationListenerWrapper = (): NotificationListenerPlugin => {
+  const plugin = registerPlugin<NotificationListenerPlugin>('NotificationListener', {
+    web: () => ({
+      async requestPermission() {
+        console.warn('NotificationListener não disponível na web');
+      },
+      async checkPermission() {
+        return { granted: false };
+      },
+      async startListening() {
+        return { active: false };
+      }
+    })
+  });
+
+  // Wrapper com debug logging
+  return {
     async requestPermission() {
-      console.warn('NotificationListener não disponível na web');
+      DebugLogger.log('Plugin: Tentando requestPermission...');
+      try {
+        await plugin.requestPermission();
+        DebugLogger.success('Plugin: requestPermission OK');
+      } catch (error: any) {
+        DebugLogger.error(`Plugin: ${error?.message || error}`);
+        throw error;
+      }
     },
     async checkPermission() {
-      return { granted: false };
+      try {
+        const result = await plugin.checkPermission();
+        DebugLogger.log(`Plugin: checkPermission = ${result.granted}`);
+        return result;
+      } catch (error: any) {
+        DebugLogger.error(`Plugin checkPermission: ${error?.message || error}`);
+        return { granted: false };
+      }
     },
     async startListening() {
-      return { active: false };
+      try {
+        const result = await plugin.startListening();
+        DebugLogger.log(`Plugin: startListening = ${result.active}`);
+        return result;
+      } catch (error: any) {
+        DebugLogger.error(`Plugin startListening: ${error?.message || error}`);
+        return { active: false };
+      }
     }
-  })
-});
+  };
+};
+
+const NotificationListener = createNotificationListenerWrapper();
 
 export default NotificationListener;
