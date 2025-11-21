@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { App as CapacitorApp } from '@capacitor/app';
 import NotificationListener, { TransactionData } from '../plugins/notificationListener';
 import { DebugLogger } from '../components/DebugModal';
 
