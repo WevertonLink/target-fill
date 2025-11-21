@@ -11,6 +11,7 @@ import android.util.Log;
 @CapacitorPlugin(name = "NotificationListener")
 public class NotificationListenerPlugin extends Plugin {
     private static final String TAG = "NotificationListener";
+    // Plugin para gerenciar permissões de acesso a notificações
 
     @PluginMethod
     public void requestPermission(PluginCall call) {
