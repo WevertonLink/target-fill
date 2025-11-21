@@ -91,14 +91,20 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
 
   const requestPermission = async () => {
     try {
+      console.log('[NotificationListener] Solicitando permissão...');
       await NotificationListener.requestPermission();
+      console.log('[NotificationListener] Permissão solicitada com sucesso');
+
       // Após o usuário voltar das configurações, verifica novamente
       setTimeout(async () => {
+        console.log('[NotificationListener] Verificando se permissão foi concedida...');
         const result = await NotificationListener.checkPermission();
+        console.log('[NotificationListener] Permissão concedida:', result.granted);
         setHasPermission(result.granted);
       }, 1000);
     } catch (error) {
-      console.error('Erro ao solicitar permissão:', error);
+      console.error('[NotificationListener] Erro ao solicitar permissão:', error);
+      throw error;
     }
   };
 

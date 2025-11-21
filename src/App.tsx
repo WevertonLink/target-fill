@@ -546,8 +546,11 @@ function App() {
                   onClick={async () => {
                     try {
                       setRequestingPermission(true);
+                      console.log('[App] Solicitando permissão de notificações...');
                       toast.success('Abrindo configurações...');
+
                       await notificationListener.requestPermission();
+                      console.log('[App] Permissão solicitada');
 
                       // Aguarda 2s e verifica se permissão foi concedida
                       setTimeout(() => {
@@ -556,10 +559,11 @@ function App() {
                       }, 2000);
 
                       setShowMenu(false);
-                    } catch (error) {
-                      console.error('Erro ao solicitar permissão:', error);
+                    } catch (error: any) {
+                      console.error('[App] Erro ao solicitar permissão:', error);
                       setRequestingPermission(false);
-                      toast.error('Erro ao abrir configurações');
+                      const errorMsg = error?.message || 'Erro desconhecido';
+                      toast.error(`Erro: ${errorMsg}`);
                     }
                   }}
                   disabled={requestingPermission}
