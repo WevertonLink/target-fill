@@ -14,66 +14,26 @@ interface AutoRule {
 
 export function useNotificationListener(onTransactionDetected: (transaction: TransactionData) => void) {
   const [hasPermission, setHasPermission] = useState(false);
-  const [isActive, setIsActive] = useState(false);
+  const [isActive] = useState(false); // Desabilitado temporariamente
   const [autoRules, setAutoRules] = useState<AutoRule[]>([]);
 
   useEffect(() => {
     // Carrega regras salvas
-    const loadRules = () => {
-      try {
-        const saved = localStorage.getItem('target_fill_auto_rules');
-        if (saved) {
-          setAutoRules(JSON.parse(saved));
-        }
-      } catch (error) {
-        console.error('Erro ao carregar regras:', error);
+    try {
+      const saved = localStorage.getItem('target_fill_auto_rules');
+      if (saved) {
+        setAutoRules(JSON.parse(saved));
       }
-    };
+    } catch (error) {
+      console.error('Erro ao carregar regras:', error);
+    }
 
-    loadRules();
-
-    // TEMPORARIAMENTE DESABILITADO - para teste
-    // TODO: Re-habilitar depois de confirmar que não causa crash
-    return;
-
-    // Listener para broadcasts do Android
-    let listenerHandle: any = null;
-    CapacitorApp.addListener('appStateChange', ({ isActive }: { isActive: boolean }) => {
-      if (isActive) {
-        // Verifica permissão com delay para garantir que o Android atualizou
-        setTimeout(() => {
-          checkPermission().catch(err => {
-            console.error('Erro ao verificar permissão após voltar ao app:', err);
-          });
-        }, 500);
-      }
-    }).then(handle => {
-      listenerHandle = handle;
-    }).catch(err => {
-      console.error('Erro ao registrar listener de app state:', err);
-    });
-
-    // Listener para transações detectadas
-    const handleTransactionDetected = (event: any) => {
-      try {
-        const transaction: TransactionData = typeof event.detail === 'string'
-          ? JSON.parse(event.detail)
-          : event.detail;
-
-        console.log('Transação recebida:', transaction);
-        onTransactionDetected(transaction);
-      } catch (error) {
-        console.error('Erro ao processar transação:', error);
-      }
-    };
-
-    window.addEventListener('transactionDetected', handleTransactionDetected);
+    // TEMPORARIAMENTE DESABILITADO - para teste de crash
+    console.log('NotificationListener desabilitado temporariamente para diagnóstico');
+    console.log('Callback:', typeof onTransactionDetected);
 
     return () => {
-      if (listenerHandle) {
-        listenerHandle.remove();
-      }
-      window.removeEventListener('transactionDetected', handleTransactionDetected);
+      // Cleanup vazio
     };
   }, [onTransactionDetected]);
 
