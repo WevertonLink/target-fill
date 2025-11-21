@@ -30,31 +30,11 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
       }
     };
 
-    // Verifica permissão ao montar - com proteção contra crashes
-    const checkPermission = async () => {
-      try {
-        const result = await NotificationListener.checkPermission();
-        setHasPermission(result.granted);
-        if (result.granted) {
-          const status = await NotificationListener.startListening();
-          setIsActive(status.active);
-        }
-      } catch (error) {
-        console.error('Erro ao verificar permissão:', error);
-        // Não fazer nada em caso de erro - evita crash
-        setHasPermission(false);
-        setIsActive(false);
-      }
-    };
-
     loadRules();
 
-    // Verifica permissão com delay para dar tempo do app inicializar
-    setTimeout(() => {
-      checkPermission().catch(err => {
-        console.error('Erro crítico ao verificar permissão:', err);
-      });
-    }, 1000);
+    // TEMPORARIAMENTE DESABILITADO - para teste
+    // TODO: Re-habilitar depois de confirmar que não causa crash
+    return;
 
     // Listener para broadcasts do Android
     let listenerHandle: any = null;
