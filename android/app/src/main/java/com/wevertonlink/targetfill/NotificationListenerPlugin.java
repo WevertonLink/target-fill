@@ -19,16 +19,12 @@ public class NotificationListenerPlugin extends Plugin {
 
             // Abre as configurações para o usuário conceder permissão
             Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-            if (getActivity() != null) {
-                getActivity().startActivity(intent);
-                Log.d(TAG, "Configurações abertas com sucesso");
-                call.resolve();
-            } else {
-                Log.e(TAG, "Activity is null");
-                call.reject("Activity não disponível");
-            }
+            // Usa o contexto diretamente (mais confiável em plugins Capacitor)
+            getContext().startActivity(intent);
+            Log.d(TAG, "Configurações abertas com sucesso via Context");
+            call.resolve();
         } catch (Exception e) {
             Log.e(TAG, "Erro ao abrir configurações: " + e.getMessage());
             call.reject("Erro ao abrir configurações: " + e.getMessage());
