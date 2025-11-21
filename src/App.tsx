@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Target, Menu, X, ArrowUpDown, Eye, EyeOff, Home, Grid3x3, LayoutList, Bell, Zap, HelpCircle } from 'lucide-react';
+import { Plus, Target, Menu, X, ArrowUpDown, Eye, EyeOff, Home, Grid3x3, LayoutList, Bell, Zap, HelpCircle, Bug } from 'lucide-react';
 import GoalCard from './components/GoalCard';
 import GoalDetails from './components/GoalDetails';
 import EditGoal from './components/EditGoal';
@@ -12,6 +12,7 @@ import AchievementsModal from './components/AchievementsModal';
 import TransactionModal from './components/TransactionModal';
 import AutoRulesModal from './components/AutoRulesModal';
 import NotificationHelpModal from './components/NotificationHelpModal';
+import DebugModal, { DebugLogger } from './components/DebugModal';
 import { useToast } from './hooks/useToast';
 import { useNotificationListener } from './hooks/useNotificationListener';
 import type { Goal } from './types';
@@ -138,6 +139,7 @@ function App() {
   const [showAutoRulesModal, setShowAutoRulesModal] = useState(false);
   const [showNotificationHelp, setShowNotificationHelp] = useState(false);
   const [requestingPermission, setRequestingPermission] = useState(false);
+  const [showDebugModal, setShowDebugModal] = useState(false);
 
   const toast = useToast();
   const notificationListener = useNotificationListener((transaction) => {
@@ -546,11 +548,11 @@ function App() {
                   onClick={async () => {
                     try {
                       setRequestingPermission(true);
-                      console.log('[App] Solicitando permissão de notificações...');
+                      DebugLogger.log('App: Solicitando permissão de notificações...');
                       toast.success('Abrindo configurações...');
 
                       await notificationListener.requestPermission();
-                      console.log('[App] Permissão solicitada');
+                      DebugLogger.success('App: Permissão solicitada');
 
                       // Aguarda 2s e verifica se permissão foi concedida
                       setTimeout(() => {
@@ -560,7 +562,7 @@ function App() {
 
                       setShowMenu(false);
                     } catch (error: any) {
-                      console.error('[App] Erro ao solicitar permissão:', error);
+                      DebugLogger.error(`App: ${error?.message || error}`);
                       setRequestingPermission(false);
                       const errorMsg = error?.message || 'Erro desconhecido';
                       toast.error(`Erro: ${errorMsg}`);
@@ -599,6 +601,19 @@ function App() {
                   </button>
                 </>
               )}
+            </div>
+
+            <div className="pt-2 border-t border-zinc-700">
+              <button
+                onClick={() => {
+                  setShowDebugModal(true);
+                  setShowMenu(false);
+                }}
+                className="w-full px-3 py-2 rounded-md text-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center gap-2"
+              >
+                <Bug size={16} />
+                Debug Console
+              </button>
             </div>
           </div>
         )}
@@ -804,6 +819,12 @@ function App() {
       {showNotificationHelp && (
         <NotificationHelpModal
           onClose={() => setShowNotificationHelp(false)}
+        />
+      )}
+
+      {showDebugModal && (
+        <DebugModal
+          onClose={() => setShowDebugModal(false)}
         />
       )}
 

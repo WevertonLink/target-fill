@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import NotificationListener, { TransactionData } from '../plugins/notificationListener';
+import { DebugLogger } from '../components/DebugModal';
 
 interface AutoRule {
   id: string;
@@ -91,19 +92,19 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
 
   const requestPermission = async () => {
     try {
-      console.log('[NotificationListener] Solicitando permissão...');
+      DebugLogger.log('Hook: Solicitando permissão...');
       await NotificationListener.requestPermission();
-      console.log('[NotificationListener] Permissão solicitada com sucesso');
+      DebugLogger.success('Hook: Permissão solicitada com sucesso');
 
       // Após o usuário voltar das configurações, verifica novamente
       setTimeout(async () => {
-        console.log('[NotificationListener] Verificando se permissão foi concedida...');
+        DebugLogger.log('Hook: Verificando se permissão foi concedida...');
         const result = await NotificationListener.checkPermission();
-        console.log('[NotificationListener] Permissão concedida:', result.granted);
+        DebugLogger.log(`Hook: Permissão concedida: ${result.granted}`);
         setHasPermission(result.granted);
       }, 1000);
-    } catch (error) {
-      console.error('[NotificationListener] Erro ao solicitar permissão:', error);
+    } catch (error: any) {
+      DebugLogger.error(`Hook: ${error?.message || error}`);
       throw error;
     }
   };
