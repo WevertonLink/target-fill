@@ -30,7 +30,7 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
       }
     };
 
-    // Verifica permissão ao montar
+    // Verifica permissão ao montar - com proteção contra crashes
     const checkPermission = async () => {
       try {
         const result = await NotificationListener.checkPermission();
@@ -41,11 +41,20 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
         }
       } catch (error) {
         console.error('Erro ao verificar permissão:', error);
+        // Não fazer nada em caso de erro - evita crash
+        setHasPermission(false);
+        setIsActive(false);
       }
     };
 
     loadRules();
-    checkPermission();
+
+    // Verifica permissão com delay para dar tempo do app inicializar
+    setTimeout(() => {
+      checkPermission().catch(err => {
+        console.error('Erro crítico ao verificar permissão:', err);
+      });
+    }, 1000);
 
     // Listener para broadcasts do Android
     let listenerHandle: any = null;
@@ -53,11 +62,15 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
       if (isActive) {
         // Verifica permissão com delay para garantir que o Android atualizou
         setTimeout(() => {
-          checkPermission();
+          checkPermission().catch(err => {
+            console.error('Erro ao verificar permissão após voltar ao app:', err);
+          });
         }, 500);
       }
     }).then(handle => {
       listenerHandle = handle;
+    }).catch(err => {
+      console.error('Erro ao registrar listener de app state:', err);
     });
 
     // Listener para transações detectadas
