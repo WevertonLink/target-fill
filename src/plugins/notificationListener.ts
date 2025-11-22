@@ -26,6 +26,16 @@ export interface NotificationListenerPlugin {
    * Inicia a escuta de notificações
    */
   startListening(): Promise<{ active: boolean }>;
+
+  /**
+   * Envia uma notificação de teste para verificar o fluxo
+   */
+  sendTestNotification(): Promise<{ success: boolean }>;
+
+  /**
+   * Obtém status detalhado do serviço
+   */
+  getServiceStatus(): Promise<{ enabled: boolean; enabledListeners: string }>;
 }
 
 // Wrapper que adiciona fallback e logging
@@ -40,6 +50,12 @@ const createNotificationListenerWrapper = (): NotificationListenerPlugin => {
       },
       async startListening() {
         return { active: false };
+      },
+      async sendTestNotification() {
+        return { success: false };
+      },
+      async getServiceStatus() {
+        return { enabled: false, enabledListeners: '' };
       }
     })
   });
@@ -74,6 +90,27 @@ const createNotificationListenerWrapper = (): NotificationListenerPlugin => {
       } catch (error: any) {
         DebugLogger.error(`Plugin startListening: ${error?.message || error}`);
         return { active: false };
+      }
+    },
+    async sendTestNotification() {
+      try {
+        DebugLogger.log('🧪 Plugin: Enviando notificação de teste...');
+        const result = await plugin.sendTestNotification();
+        DebugLogger.success('Plugin: Notificação de teste enviada!');
+        return result;
+      } catch (error: any) {
+        DebugLogger.error(`Plugin sendTestNotification: ${error?.message || error}`);
+        return { success: false };
+      }
+    },
+    async getServiceStatus() {
+      try {
+        const result = await plugin.getServiceStatus();
+        DebugLogger.log(`📊 Status: enabled=${result.enabled}, listeners=${result.enabledListeners}`);
+        return result;
+      } catch (error: any) {
+        DebugLogger.error(`Plugin getServiceStatus: ${error?.message || error}`);
+        return { enabled: false, enabledListeners: '' };
       }
     }
   };

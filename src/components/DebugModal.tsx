@@ -1,5 +1,6 @@
-import { X, Trash2, Copy } from 'lucide-react';
+import { X, Trash2, Copy, TestTube, Activity } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import NotificationListener from '../plugins/notificationListener';
 
 interface DebugModalProps {
   onClose: () => void;
@@ -65,12 +66,48 @@ export default function DebugModal({ onClose }: DebugModalProps) {
     });
   };
 
+  const testNotification = async () => {
+    try {
+      DebugLogger.log('🧪 Iniciando teste de notificação...');
+      await NotificationListener.sendTestNotification();
+    } catch (error) {
+      DebugLogger.error(`Erro ao testar notificação: ${error}`);
+    }
+  };
+
+  const checkServiceStatus = async () => {
+    try {
+      DebugLogger.log('🔍 Verificando status do serviço...');
+      const status = await NotificationListener.getServiceStatus();
+      DebugLogger.log(`📊 Serviço habilitado: ${status.enabled}`);
+      if (status.enabledListeners) {
+        DebugLogger.log(`📋 Listeners: ${status.enabledListeners}`);
+      }
+    } catch (error) {
+      DebugLogger.error(`Erro ao verificar status: ${error}`);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/90 flex flex-col z-50">
       {/* Header */}
       <div className="bg-zinc-900 border-b border-zinc-800 p-4 flex items-center justify-between">
         <h2 className="text-lg font-bold text-gold-400">🐛 Debug Console</h2>
         <div className="flex items-center gap-2">
+          <button
+            onClick={checkServiceStatus}
+            className="p-2 hover:bg-zinc-800 rounded-md transition-colors"
+            title="Verificar status do serviço"
+          >
+            <Activity size={20} className="text-blue-400" />
+          </button>
+          <button
+            onClick={testNotification}
+            className="p-2 hover:bg-zinc-800 rounded-md transition-colors"
+            title="Enviar notificação de teste"
+          >
+            <TestTube size={20} className="text-green-400" />
+          </button>
           <button
             onClick={copyLogs}
             className="p-2 hover:bg-zinc-800 rounded-md transition-colors"

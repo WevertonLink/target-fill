@@ -45,4 +45,52 @@ public class NotificationListenerPlugin extends Plugin {
         boolean isActive = NotificationListener.isEnabled(getContext());
         call.resolve(new com.getcapacitor.JSObject().put("active", isActive));
     }
+
+    @PluginMethod
+    public void sendTestNotification(PluginCall call) {
+        try {
+            Log.d(TAG, "🧪 Enviando notificação de teste via broadcast...");
+
+            // Simula uma transação detectada
+            android.content.Intent intent = new android.content.Intent("com.wevertonlink.targetfill.TRANSACTION_DETECTED");
+            intent.putExtra("amount", 100.50);
+            intent.putExtra("type", "CREDIT");
+            intent.putExtra("category", "Teste");
+            intent.putExtra("source", "Nubank (Teste)");
+            intent.putExtra("description", "Notificação de teste");
+            intent.putExtra("rawText", "Você recebeu R$ 100,50 de Teste");
+
+            getContext().sendBroadcast(intent);
+            Log.d(TAG, "✅ Broadcast de teste enviado!");
+
+            call.resolve(new com.getcapacitor.JSObject().put("success", true));
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Erro ao enviar teste: " + e.getMessage());
+            call.reject("Erro ao enviar teste: " + e.getMessage());
+        }
+    }
+
+    @PluginMethod
+    public void getServiceStatus(PluginCall call) {
+        try {
+            boolean isEnabled = NotificationListener.isEnabled(getContext());
+
+            // Pega a lista de listeners habilitados
+            String enabledListeners = android.provider.Settings.Secure.getString(
+                getContext().getContentResolver(),
+                "enabled_notification_listeners"
+            );
+
+            com.getcapacitor.JSObject result = new com.getcapacitor.JSObject();
+            result.put("enabled", isEnabled);
+            result.put("enabledListeners", enabledListeners != null ? enabledListeners : "");
+
+            Log.d(TAG, "📊 Status do serviço - Enabled: " + isEnabled);
+            Log.d(TAG, "📊 Listeners habilitados: " + enabledListeners);
+
+            call.resolve(result);
+        } catch (Exception e) {
+            call.reject("Erro ao verificar status: " + e.getMessage());
+        }
+    }
 }
