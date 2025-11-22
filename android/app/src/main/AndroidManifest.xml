@@ -35,9 +35,9 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
-        <!-- Serviço de escuta de notificações -->
+        <!-- Serviço de escuta de notificações - CAMINHO CORRIGIDO -->
         <service
-            android:name=".NotificationListener"
+            android:name="com.wevertonlink.targetfill.NotificationListener"
             android:label="Target-Fill Notification Listener"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
             android:exported="true">
@@ -48,6 +48,5 @@
     </application>
 
     <!-- Permissions -->
-
     <uses-permission android:name="android.permission.INTERNET" />
 </manifest>
