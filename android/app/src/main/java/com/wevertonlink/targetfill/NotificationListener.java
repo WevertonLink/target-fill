@@ -188,14 +188,17 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     private void sendTransactionToApp(TransactionData transaction) {
-        // Envia broadcast para o app
+        // Envia broadcast EXPLÍCITO para o app (importante para Android moderno)
         Intent intent = new Intent("com.wevertonlink.targetfill.TRANSACTION_DETECTED");
+        intent.setPackage(getPackageName()); // Torna o broadcast explícito
         intent.putExtra("amount", transaction.amount);
         intent.putExtra("type", transaction.type);
         intent.putExtra("category", transaction.category);
         intent.putExtra("source", transaction.source);
         intent.putExtra("description", transaction.description);
         intent.putExtra("rawText", transaction.rawText);
+
+        Log.d(TAG, "📤 Enviando broadcast explícito para: " + getPackageName());
         sendBroadcast(intent);
     }
 

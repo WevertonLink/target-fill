@@ -16,15 +16,18 @@ public class MainActivity extends BridgeActivity {
 
         super.onCreate(savedInstanceState);
 
-        Log.d("MainActivity", "NotificationListenerPlugin registrado");
+        Log.d("MainActivity", "✅ NotificationListenerPlugin registrado");
 
         // Registrar broadcast receiver para transações
         transactionReceiver = new TransactionBroadcastReceiver(getBridge());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Log.d("MainActivity", "📡 Registrando receiver (Android 13+, NOT_EXPORTED)");
             registerReceiver(transactionReceiver, TransactionBroadcastReceiver.getIntentFilter(), Context.RECEIVER_NOT_EXPORTED);
         } else {
+            Log.d("MainActivity", "📡 Registrando receiver (Android < 13)");
             registerReceiver(transactionReceiver, TransactionBroadcastReceiver.getIntentFilter());
         }
+        Log.d("MainActivity", "✅ TransactionBroadcastReceiver registrado!");
 
         // Configurar status bar
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {

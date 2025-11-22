@@ -53,6 +53,7 @@ public class NotificationListenerPlugin extends Plugin {
 
             // Simula uma transação detectada
             android.content.Intent intent = new android.content.Intent("com.wevertonlink.targetfill.TRANSACTION_DETECTED");
+            intent.setPackage(getContext().getPackageName()); // Broadcast explícito
             intent.putExtra("amount", 100.50);
             intent.putExtra("type", "CREDIT");
             intent.putExtra("category", "Teste");
@@ -60,6 +61,7 @@ public class NotificationListenerPlugin extends Plugin {
             intent.putExtra("description", "Notificação de teste");
             intent.putExtra("rawText", "Você recebeu R$ 100,50 de Teste");
 
+            Log.d(TAG, "📤 Enviando broadcast explícito para: " + getContext().getPackageName());
             getContext().sendBroadcast(intent);
             Log.d(TAG, "✅ Broadcast de teste enviado!");
 
