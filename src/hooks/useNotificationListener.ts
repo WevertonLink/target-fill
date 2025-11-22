@@ -13,7 +13,7 @@ interface AutoRule {
 
 export function useNotificationListener(onTransactionDetected: (transaction: TransactionData) => void) {
   const [hasPermission, setHasPermission] = useState(false);
-  const [isActive] = useState(false); // Desabilitado temporariamente
+  const [isActive, setIsActive] = useState(false);
   const [autoRules, setAutoRules] = useState<AutoRule[]>([]);
 
   useEffect(() => {
@@ -27,12 +27,40 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
       console.error('Erro ao carregar regras:', error);
     }
 
-    // TEMPORARIAMENTE DESABILITADO - para teste de crash
-    console.log('NotificationListener desabilitado temporariamente para diagnóstico');
-    console.log('Callback:', typeof onTransactionDetected);
+    // Verifica permissão uma vez ao iniciar
+    const checkInitialPermission = async () => {
+      try {
+        const result = await NotificationListener.checkPermission();
+        setHasPermission(result.granted);
+        if (result.granted) {
+          const status = await NotificationListener.startListening();
+          setIsActive(status.active);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar permissão inicial:', error);
+      }
+    };
+
+    checkInitialPermission();
+
+    // Listener para transações detectadas
+    const handleTransactionDetected = (event: any) => {
+      try {
+        const transaction: TransactionData = typeof event.detail === 'string'
+          ? JSON.parse(event.detail)
+          : event.detail;
+
+        console.log('Transação recebida:', transaction);
+        onTransactionDetected(transaction);
+      } catch (error) {
+        console.error('Erro ao processar transação:', error);
+      }
+    };
+
+    window.addEventListener('transactionDetected', handleTransactionDetected);
 
     return () => {
-      // Cleanup vazio
+      window.removeEventListener('transactionDetected', handleTransactionDetected);
     };
   }, [onTransactionDetected]);
 
@@ -44,10 +72,14 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
 
       // Após o usuário voltar das configurações, verifica novamente
       setTimeout(async () => {
-        DebugLogger.log('Hook: Verificando se permissão foi concedida...');
-        const result = await NotificationListener.checkPermission();
-        DebugLogger.log(`Hook: Permissão concedida: ${result.granted}`);
-        setHasPermission(result.granted);
+        try {
+          DebugLogger.log('Hook: Verificando se permissão foi concedida...');
+          const result = await NotificationListener.checkPermission();
+          DebugLogger.log(`Hook: Permissão concedida: ${result.granted}`);
+          setHasPermission(result.granted);
+        } catch (err) {
+          console.error('Erro ao verificar permissão:', err);
+        }
       }, 1000);
     } catch (error: any) {
       DebugLogger.error(`Hook: ${error?.message || error}`);
