@@ -17,11 +17,14 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
   const [autoRules, setAutoRules] = useState<AutoRule[]>([]);
 
   useEffect(() => {
+    console.log('🚀 [JS] useNotificationListener montado!');
+
     // Carrega regras salvas
     try {
       const saved = localStorage.getItem('target_fill_auto_rules');
       if (saved) {
         setAutoRules(JSON.parse(saved));
+        console.log('📋 [JS] Regras carregadas:', JSON.parse(saved).length);
       }
     } catch (error) {
       console.error('Erro ao carregar regras:', error);
@@ -30,14 +33,19 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
     // Verifica permissão uma vez ao iniciar
     const checkInitialPermission = async () => {
       try {
+        console.log('🔍 [JS] Verificando permissão inicial...');
         const result = await NotificationListener.checkPermission();
+        console.log('🔐 [JS] Permissão:', result.granted);
         setHasPermission(result.granted);
+
         if (result.granted) {
+          console.log('🎧 [JS] Iniciando listening...');
           const status = await NotificationListener.startListening();
+          console.log('📡 [JS] Status do listening:', status.active);
           setIsActive(status.active);
         }
       } catch (error) {
-        console.error('Erro ao verificar permissão inicial:', error);
+        console.error('❌ [JS] Erro ao verificar permissão inicial:', error);
       }
     };
 
@@ -46,18 +54,25 @@ export function useNotificationListener(onTransactionDetected: (transaction: Tra
     // Listener para transações detectadas
     const handleTransactionDetected = (event: any) => {
       try {
+        console.log('🎯 [JS] Evento transactionDetected recebido!', event);
+
         const transaction: TransactionData = typeof event.detail === 'string'
           ? JSON.parse(event.detail)
           : event.detail;
 
-        console.log('Transação recebida:', transaction);
+        console.log('💰 [JS] Transação processada:', transaction);
+        DebugLogger.log(`💰 Transação: R$ ${transaction.amount} - ${transaction.type} (${transaction.source})`);
+
         onTransactionDetected(transaction);
       } catch (error) {
-        console.error('Erro ao processar transação:', error);
+        console.error('❌ [JS] Erro ao processar transação:', error);
+        DebugLogger.error(`Erro ao processar transação: ${error}`);
       }
     };
 
+    console.log('👂 [JS] Registrando listener para transactionDetected');
     window.addEventListener('transactionDetected', handleTransactionDetected);
+    console.log('✅ [JS] Listener registrado com sucesso');
 
     return () => {
       window.removeEventListener('transactionDetected', handleTransactionDetected);

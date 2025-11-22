@@ -35,11 +35,15 @@ public class NotificationListener extends NotificationListenerService {
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         String packageName = sbn.getPackageName();
+        Log.d(TAG, "📱 Notificação recebida de: " + packageName);
 
         // Verifica se é de um banco
         if (!isBankApp(packageName)) {
+            Log.d(TAG, "❌ Não é app bancário: " + packageName);
             return;
         }
+
+        Log.d(TAG, "✅ App bancário detectado: " + packageName);
 
         // Extrai informações da notificação
         String title = "";
@@ -54,14 +58,17 @@ public class NotificationListener extends NotificationListenerService {
         }
 
         String fullText = title + " " + text;
-        Log.d(TAG, "Notificação bancária: " + fullText);
+        Log.d(TAG, "💬 Notificação bancária: " + fullText);
 
         // Parse da notificação
         TransactionData transaction = parseNotification(fullText, packageName);
 
         if (transaction != null) {
-            Log.d(TAG, "Transação detectada: " + transaction.toString());
+            Log.d(TAG, "✅ Transação detectada: " + transaction.toString());
             sendTransactionToApp(transaction);
+            Log.d(TAG, "📤 Broadcast enviado!");
+        } else {
+            Log.d(TAG, "⚠️ Notificação não contém transação válida");
         }
     }
 
