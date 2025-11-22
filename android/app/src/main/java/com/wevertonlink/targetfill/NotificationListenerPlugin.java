@@ -11,7 +11,16 @@ import android.util.Log;
 @CapacitorPlugin(name = "NotificationListener")
 public class NotificationListenerPlugin extends Plugin {
     private static final String TAG = "NotificationListener";
+    private static NotificationListenerPlugin instance;
+
     // Plugin para gerenciar permissões de acesso a notificações
+
+    @Override
+    public void load() {
+        super.load();
+        instance = this;
+        Log.d(TAG, "✅ Plugin carregado, instância salva");
+    }
 
     @PluginMethod
     public void requestPermission(PluginCall call) {
@@ -49,26 +58,49 @@ public class NotificationListenerPlugin extends Plugin {
     @PluginMethod
     public void sendTestNotification(PluginCall call) {
         try {
-            Log.d(TAG, "🧪 Enviando notificação de teste via broadcast...");
+            Log.d(TAG, "🧪 Enviando notificação de teste diretamente...");
 
-            // Simula uma transação detectada
-            android.content.Intent intent = new android.content.Intent("com.wevertonlink.targetfill.TRANSACTION_DETECTED");
-            intent.setPackage(getContext().getPackageName()); // Broadcast explícito
-            intent.putExtra("amount", 100.50);
-            intent.putExtra("type", "CREDIT");
-            intent.putExtra("category", "Teste");
-            intent.putExtra("source", "Nubank (Teste)");
-            intent.putExtra("description", "Notificação de teste");
-            intent.putExtra("rawText", "Você recebeu R$ 100,50 de Teste");
-
-            Log.d(TAG, "📤 Enviando broadcast explícito para: " + getContext().getPackageName());
-            getContext().sendBroadcast(intent);
-            Log.d(TAG, "✅ Broadcast de teste enviado!");
+            // Envia teste diretamente via método estático
+            sendTransactionEvent(100.50, "CREDIT", "Teste", "Nubank (Teste)",
+                                "Notificação de teste", "Você recebeu R$ 100,50 de Teste");
 
             call.resolve(new com.getcapacitor.JSObject().put("success", true));
         } catch (Exception e) {
             Log.e(TAG, "❌ Erro ao enviar teste: " + e.getMessage());
             call.reject("Erro ao enviar teste: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Método estático que pode ser chamado do NotificationListener
+     * para enviar eventos de transação diretamente para o JavaScript
+     */
+    public static void sendTransactionEvent(double amount, String type, String category,
+                                           String source, String description, String rawText) {
+        if (instance == null) {
+            Log.e(TAG, "❌ Plugin instance não disponível! App pode não estar aberto.");
+            return;
+        }
+
+        try {
+            Log.d(TAG, "📤 Enviando evento de transação para JavaScript...");
+
+            com.getcapacitor.JSObject data = new com.getcapacitor.JSObject();
+            data.put("amount", amount);
+            data.put("type", type);
+            data.put("category", category);
+            data.put("source", source);
+            data.put("description", description != null ? description : "");
+            data.put("rawText", rawText);
+
+            Log.d(TAG, "💰 Transação: R$ " + amount + " - " + type + " de " + source);
+            Log.d(TAG, "🚀 Disparando evento JavaScript: " + data.toString());
+
+            instance.getBridge().triggerWindowJSEvent("transactionDetected", data.toString());
+
+            Log.d(TAG, "✅ Evento JavaScript disparado com sucesso!");
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Erro ao enviar evento: " + e.getMessage(), e);
         }
     }
 
