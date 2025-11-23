@@ -188,19 +188,42 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     private void sendTransactionToApp(TransactionData transaction) {
-        Log.d(TAG, "📤 Enviando transação diretamente para o plugin...");
+        Log.d(TAG, "💾 Salvando transação no banco de dados...");
 
-        // Envia DIRETAMENTE via plugin (sem usar broadcast)
-        NotificationListenerPlugin.sendTransactionEvent(
-            transaction.amount,
-            transaction.type,
-            transaction.category,
-            transaction.source,
-            transaction.description,
-            transaction.rawText
-        );
+        try {
+            // Salva no banco de dados Room
+            AppDatabase db = AppDatabase.getInstance(this);
+            Transaction dbTransaction = new Transaction(
+                transaction.amount,
+                transaction.type,
+                transaction.category,
+                transaction.source,
+                transaction.description,
+                transaction.rawText,
+                System.currentTimeMillis()
+            );
 
-        Log.d(TAG, "✅ Transação enviada ao plugin!");
+            db.transactionDao().insert(dbTransaction);
+            Log.d(TAG, "✅ Transação salva no DB! ID: " + dbTransaction.id);
+
+            // Tenta enviar para o plugin se estiver disponível
+            if (NotificationListenerPlugin.sendTransactionEvent(
+                transaction.amount,
+                transaction.type,
+                transaction.category,
+                transaction.source,
+                transaction.description,
+                transaction.rawText
+            )) {
+                Log.d(TAG, "✅ Transação também enviada ao plugin (app está aberto)");
+                // Marca como processada se o envio funcionou
+                db.transactionDao().markAsProcessed(new int[]{dbTransaction.id});
+            } else {
+                Log.d(TAG, "⏳ App fechado. Transação ficará pendente no DB.");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Erro ao salvar no DB: " + e.getMessage(), e);
+        }
     }
 
     public static boolean isEnabled(Context context) {
