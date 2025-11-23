@@ -8,11 +8,17 @@ import com.getcapacitor.JSObject;
 import android.content.Intent;
 import android.provider.Settings;
 import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @CapacitorPlugin(name = "NotificationListener")
 public class NotificationListenerPlugin extends Plugin {
     private static final String TAG = "NotificationListener";
     private static NotificationListenerPlugin instance;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     @Override
     public void load() {
@@ -121,42 +127,53 @@ public class NotificationListenerPlugin extends Plugin {
 
     /**
      * Processa transações pendentes do banco de dados quando o app abre
+     * Roda em background thread para evitar travamento
      */
     private void processPendingTransactions() {
-        try {
-            AppDatabase db = AppDatabase.getInstance(getContext());
-            java.util.List<Transaction> pending = db.transactionDao().getUnprocessedTransactions();
+        executorService.execute(() -> {
+            try {
+                AppDatabase db = AppDatabase.getInstance(getContext());
+                java.util.List<Transaction> pending = db.transactionDao().getUnprocessedTransactions();
 
-            if (pending.isEmpty()) {
-                Log.d(TAG, "📭 Nenhuma transação pendente");
-                return;
-            }
-
-            Log.d(TAG, "📬 Processando " + pending.size() + " transação(ões) pendente(s)...");
-
-            java.util.List<Integer> processedIds = new java.util.ArrayList<>();
-
-            for (Transaction t : pending) {
-                if (sendTransactionEvent(t.amount, t.type, t.category, t.source,
-                                        t.description, t.rawText)) {
-                    processedIds.add(t.id);
-                    Log.d(TAG, "✅ Transação " + t.id + " processada");
+                if (pending.isEmpty()) {
+                    Log.d(TAG, "📭 Nenhuma transação pendente");
+                    return;
                 }
+
+                Log.d(TAG, "📬 Processando " + pending.size() + " transação(ões) pendente(s)...");
+
+                java.util.List<Integer> processedIds = new java.util.ArrayList<>();
+
+                for (Transaction t : pending) {
+                    // Envia na main thread (Capacitor exige)
+                    final Transaction transaction = t;
+                    mainHandler.post(() -> {
+                        if (sendTransactionEvent(transaction.amount, transaction.type,
+                                                transaction.category, transaction.source,
+                                                transaction.description, transaction.rawText)) {
+                            // Marca como processada em background
+                            executorService.execute(() -> {
+                                try {
+                                    AppDatabase db2 = AppDatabase.getInstance(getContext());
+                                    db2.transactionDao().markAsProcessed(new int[]{transaction.id});
+                                    Log.d(TAG, "✅ Transação " + transaction.id + " processada");
+                                } catch (Exception e) {
+                                    Log.e(TAG, "❌ Erro ao marcar como processada: " + e.getMessage());
+                                }
+                            });
+                        }
+                    });
+                }
+
+                // Limpa transações processadas com mais de 7 dias
+                long weekAgo = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000);
+                db.transactionDao().deleteOldProcessed(weekAgo);
+                Log.d(TAG, "🧹 Transações antigas limpas");
+
+            } catch (Exception e) {
+                Log.e(TAG, "❌ Erro ao processar transações pendentes: " + e.getMessage(), e);
             }
-
-            if (!processedIds.isEmpty()) {
-                int[] idsArray = processedIds.stream().mapToInt(i -> i).toArray();
-                db.transactionDao().markAsProcessed(idsArray);
-                Log.d(TAG, "✅ " + processedIds.size() + " transação(ões) marcada(s) como processada(s)");
-            }
-
-            // Limpa transações processadas com mais de 7 dias
-            long weekAgo = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000);
-            db.transactionDao().deleteOldProcessed(weekAgo);
-
-        } catch (Exception e) {
-            Log.e(TAG, "❌ Erro ao processar transações pendentes: " + e.getMessage(), e);
-        }
+        });
     }
 
     @PluginMethod
@@ -185,19 +202,21 @@ public class NotificationListenerPlugin extends Plugin {
 
     @PluginMethod
     public void getPendingTransactionsCount(PluginCall call) {
-        try {
-            AppDatabase db = AppDatabase.getInstance(getContext());
-            int count = db.transactionDao().getUnprocessedCount();
+        executorService.execute(() -> {
+            try {
+                AppDatabase db = AppDatabase.getInstance(getContext());
+                int count = db.transactionDao().getUnprocessedCount();
 
-            JSObject result = new JSObject();
-            result.put("count", count);
+                JSObject result = new JSObject();
+                result.put("count", count);
 
-            Log.d(TAG, "📊 Transações pendentes: " + count);
-            call.resolve(result);
-        } catch (Exception e) {
-            Log.e(TAG, "❌ Erro ao contar transações: " + e.getMessage());
-            call.reject("Erro: " + e.getMessage());
-        }
+                Log.d(TAG, "📊 Transações pendentes: " + count);
+                call.resolve(result);
+            } catch (Exception e) {
+                Log.e(TAG, "❌ Erro ao contar transações: " + e.getMessage());
+                call.reject("Erro: " + e.getMessage());
+            }
+        });
     }
 
     @PluginMethod
@@ -210,5 +229,11 @@ public class NotificationListenerPlugin extends Plugin {
             Log.e(TAG, "❌ Erro ao processar: " + e.getMessage());
             call.reject("Erro: " + e.getMessage());
         }
+    }
+
+    @Override
+    protected void handleOnDestroy() {
+        super.handleOnDestroy();
+        executorService.shutdown();
     }
 }

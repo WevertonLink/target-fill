@@ -17,8 +17,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 context.getApplicationContext(),
                 AppDatabase.class,
                 "target_fill_database"
-            ).allowMainThreadQueries() // Para simplificar; em produção use background threads
-             .build();
+            ).build();
         }
         return instance;
     }

@@ -1,67 +1,129 @@
 import { useState, useEffect } from 'react';
-import { Shield, CheckCircle, XCircle } from 'lucide-react';
+import { registerPlugin } from '@capacitor/core';
 
-export default function PermissionChecker() {
-  const [status, setStatus] = useState<string>('Verificando...');
-  const [hasPermission, setHasPermission] = useState<boolean>(false);
+interface NotificationListenerPlugin {
+  checkPermission(): Promise<{ granted: boolean }>;
+  requestPermission(): Promise<void>;
+  getServiceStatus(): Promise<{ enabled: boolean; enabledListeners: string }>;
+  sendTestNotification(): Promise<{ success: boolean }>;
+}
 
-  useEffect(() => {
-    checkPermission();
-    
-    // Verificar a cada 3 segundos
-    const interval = setInterval(checkPermission, 3000);
-    return () => clearInterval(interval);
-  }, []);
+const NotificationListener = registerPlugin<NotificationListenerPlugin>('NotificationListener');
+
+export function PermissionChecker() {
+  const [hasPermission, setHasPermission] = useState(false);
+  const [serviceInfo, setServiceInfo] = useState<string>('');
+  const [checking, setChecking] = useState(false);
 
   const checkPermission = async () => {
+    setChecking(true);
     try {
-      const plugin = (window as any).NotificationListenerPlugin;
+      const result = await NotificationListener.checkPermission();
+      setHasPermission(result.granted);
       
-      if (!plugin) {
-        setStatus('Plugin não encontrado');
-        setHasPermission(false);
-        return;
-      }
-
-      const result = await plugin.hasPermission();
-      const granted = result.value === true;
+      const status = await NotificationListener.getServiceStatus();
+      setServiceInfo(`Habilitado: ${status.enabled}\nListeners: ${status.enabledListeners}`);
       
-      setHasPermission(granted);
-      setStatus(granted ? 'Permissão ativa!' : 'Permissão negada');
+      console.log('🔍 Permissão:', result.granted);
+      console.log('📊 Status:', status);
     } catch (error) {
-      setStatus(`Erro: ${error}`);
-      setHasPermission(false);
+      console.error('❌ Erro ao verificar:', error);
+    } finally {
+      setChecking(false);
     }
   };
 
+  const requestPermission = async () => {
+    try {
+      await NotificationListener.requestPermission();
+      console.log('📱 Configurações abertas');
+      
+      // Aguarda um pouco e verifica novamente
+      setTimeout(checkPermission, 2000);
+    } catch (error) {
+      console.error('❌ Erro ao solicitar:', error);
+    }
+  };
+
+  const sendTest = async () => {
+    try {
+      console.log('🧪 Enviando teste...');
+      await NotificationListener.sendTestNotification();
+      console.log('✅ Teste enviado!');
+    } catch (error) {
+      console.error('❌ Erro no teste:', error);
+      alert('Erro: ' + error);
+    }
+  };
+
+  useEffect(() => {
+    checkPermission();
+  }, []);
+
   return (
-    <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-4 mb-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Shield className={hasPermission ? 'text-green-400' : 'text-zinc-500'} size={24} />
-          <div>
-            <p className="text-white font-medium">Status de Detecção</p>
-            <p className="text-zinc-400 text-sm">{status}</p>
-          </div>
+    <div className="p-4 bg-gray-900 rounded-lg">
+      <h3 className="text-lg font-bold mb-4 text-white">
+        🔔 Status do Notification Listener
+      </h3>
+
+      <div className="space-y-3">
+        <div className={`p-3 rounded ${hasPermission ? 'bg-green-900' : 'bg-red-900'}`}>
+          <p className="font-semibold text-white">
+            {hasPermission ? '✅ ATIVO' : '❌ INATIVO'}
+          </p>
+          <p className="text-sm text-gray-300 mt-1">
+            {hasPermission 
+              ? 'Pronto para detectar transações!' 
+              : 'Permissão não concedida'}
+          </p>
         </div>
-        {hasPermission ? (
-          <CheckCircle className="text-green-400" size={24} />
-        ) : (
-          <XCircle className="text-zinc-500" size={24} />
+
+        {serviceInfo && (
+          <div className="p-3 bg-gray-800 rounded text-xs">
+            <pre className="text-gray-300 whitespace-pre-wrap">{serviceInfo}</pre>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            onClick={checkPermission}
+            disabled={checking}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded font-medium"
+          >
+            {checking ? '⏳ Verificando...' : '🔄 Verificar'}
+          </button>
+
+          {!hasPermission && (
+            <button
+              onClick={requestPermission}
+              className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded font-medium"
+            >
+              ⚙️ Ativar
+            </button>
+          )}
+
+          {hasPermission && (
+            <button
+              onClick={sendTest}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium"
+            >
+              🧪 Testar
+            </button>
+          )}
+        </div>
+
+        {!hasPermission && (
+          <div className="p-3 bg-yellow-900 rounded text-sm">
+            <p className="font-semibold text-yellow-100 mb-2">📋 Como ativar:</p>
+            <ol className="list-decimal list-inside space-y-1 text-yellow-200">
+              <li>Toque em "⚙️ Ativar"</li>
+              <li>Encontre "Target Fill" na lista</li>
+              <li>Ative o switch</li>
+              <li>Volte ao app</li>
+            </ol>
+          </div>
         )}
       </div>
-      
-      {!hasPermission && (
-        <div className="mt-3 pt-3 border-t border-zinc-700">
-          <p className="text-zinc-400 text-xs mb-2">Para ativar:</p>
-          <ol className="text-zinc-500 text-xs space-y-1 list-decimal list-inside">
-            <li>Vá em Configurações do Android</li>
-            <li>Apps → Target-Fill</li>
-            <li>Permissões especiais</li>
-            <li>Acesso a notificações → Ativar</li>
-          </ol>
-        </div>
-      )}
     </div>
   );
 }
