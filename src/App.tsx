@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Plus, Target, Menu, X, ArrowUpDown, Eye, EyeOff, Home, Grid3x3, LayoutList, Bell, Zap, HelpCircle, Bug } from 'lucide-react';
 import GoalCard from './components/GoalCard';
 import GoalDetails from './components/GoalDetails';
@@ -142,23 +142,28 @@ function App() {
   const [showDebugModal, setShowDebugModal] = useState(false);
 
   const toast = useToast();
-  const notificationListener = useNotificationListener((transaction) => {
-    // Callback quando uma transação é detectada
-    const suggestedGoalId = notificationListener.checkAutoRules(transaction);
 
-    if (suggestedGoalId) {
-      // Regra automática encontrada - aplica direto e notifica
-      const goal = goals.find(g => g.id === suggestedGoalId);
-      if (goal) {
-        handleAddPayment(suggestedGoalId, transaction.amount.toString());
-        toast.success(`✓ R$ ${transaction.amount.toFixed(2)} adicionado automaticamente a "${goal.name}"`);
-        return;
+  // Inicializa o listener (a lógica de auto-regras será aplicada depois)
+  const notificationListener = useNotificationListener(useCallback((transaction: TransactionData) => {
+    // Apenas seta a transação detectada - a lógica de auto-regras acontece depois
+    setDetectedTransaction(transaction);
+  }, []));
+
+  // Aplica auto-regras quando uma transação é detectada
+  useEffect(() => {
+    if (detectedTransaction) {
+      const suggestedGoalId = notificationListener.checkAutoRules(detectedTransaction);
+
+      if (suggestedGoalId) {
+        const goal = goals.find(g => g.id === suggestedGoalId);
+        if (goal) {
+          handleAddPayment(suggestedGoalId, detectedTransaction.amount.toString());
+          toast.success(`✓ R$ ${detectedTransaction.amount.toFixed(2)} adicionado automaticamente a "${goal.name}"`);
+          setDetectedTransaction(null); // Limpa para não processar de novo
+        }
       }
     }
-
-    // Sem regra - mostra modal de confirmação
-    setDetectedTransaction(transaction);
-  });
+  }, [detectedTransaction]); // Apenas depende de detectedTransaction
 
   const loadGoals = () => {
     try {
